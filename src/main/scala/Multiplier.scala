@@ -17,14 +17,14 @@ class Multiplier(val w: Int) extends Module {
     val startState = RegInit(1.B)
     val partialProd = RegInit(0.U((2*w).W))
     val multiplier = RegInit(0.U(w.W))
-    val adder = Module(new Adder(w))
+    val adder = Module(new KoggeStoneAdder(w))
     val prevCarry = RegInit(0.U(1.W))
     val bitCount = RegInit(w.U)
 
     val sum = adder.io.sum
 
-    adder.io.in1 := partialProd(2*w-1, w)
-    adder.io.in2 := Mux(multiplier(0), io.a, 0.U)
+    adder.io.a := partialProd(2*w-1, w)
+    adder.io.b := Mux(multiplier(0), io.a, 0.U)
     adder.io.cin := prevCarry 
     io.carry := prevCarry
     prevCarry := adder.io.cout

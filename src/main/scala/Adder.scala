@@ -2,43 +2,75 @@ package fpu
 
 import chisel3._
 
-class FullAdder extends Module {
-    val io = IO(new Bundle {
-        val in1 = Input(UInt(1.W))
-        val in2 = Input(UInt(1.W))
-        val cin = Input(UInt(1.W))
-        val sum = Output(UInt(1.W))
-        val cout = Output(UInt(1.W))
-    })
-
-    val in1_xor_in2 = io.in1 ^ io.in2
-    io.sum := in1_xor_in2 ^ io.cin
-    io.cout := (io.in1 & io.in2) | (in1_xor_in2 & io.cin)
+trait PrefixSum {
+    def apply[T](summands: Seq[T]) (associativeOp: (T, T) => T) : Vector[T]
 }
 
-class Adder(val n:Int) extends Module {
+object RipplePrefixSum extends PrefixSum {
+    def apply[T](summands: Seq[T]) (associativeOp: (T, T) => T) : Vector[T] = {
+        def helper(offset: Int, x: Vector[T]) : Vector[T] = {
+            if (offset >= x.size) {
+                x
+            } else {
+                val layer = Vector.tabulate(x.size) { i =>
+                    if (i != offset) {
+                        x(i)
+                    } else {
+                        associativeOp(x(i-1), x(i))
+                    }
+                }
+                helper (offset+1, layer) }
+        }
+
+        helper(1, summands.toVector)
+    }
+}
+
+object DensePrefixSum extends PrefixSum {
+    def apply[T](summands: Seq[T]) (associativeOp: (T, T) => T) : Vector[T] = {
+        def helper(offset: Int, x: Vector[T]) : Vector[T] = {
+            if (offset >= x.size) {
+                x
+            } else {
+                val layer = Vector.tabulate(x.size) { i =>
+                    if (i < offset) {
+                        x(i)
+                    } else {
+                        associativeOp(x(i-offset), x(i))
+                    }
+                }
+                helper(offset << 1, layer)
+            }
+        }
+
+        helper(1, summands.toVector)
+    }
+}
+
+class KoggeStoneAdder(val width: Int) extends Module {
+    require(width > 0)
     val io = IO(new Bundle {
-        val in1 = Input(UInt(n.W))
-        val in2 = Input(UInt(n.W))
+        val a = Input(UInt(width.W))
+        val b = Input(UInt(width.W))
         val cin = Input(UInt(1.W))
-        val sum = Output(UInt(n.W))
+
+        val sum = Output(UInt(width.W))
         val cout = Output(UInt(1.W))
     })
 
-    val FAs = Array.fill(n)(Module(new FullAdder()))
-    val carry = Wire(Vec(n+1, UInt(1.W)))
-    val sum = Wire(Vec(n, UInt(1.W)))
-
-    carry(0) := io.cin
-
-    for (i <- 0 until n) {
-        FAs(i).io.in1 := io.in1(i)
-        FAs(i).io.in2 := io.in2(i)
-        FAs(i).io.cin := carry(i)
-        carry(i+1) := FAs(i).io.cout
-        sum(i) := FAs(i).io.sum
+    val as = io.a.asBools
+    val bs = io.b.asBools
+    
+    val pairs = (false.B, io.cin.asBool) +: as.zip(bs).map { case (a, b) => (a ^ b, a && b) }
+    val pgs = DensePrefixSum(pairs) {
+        case ((pp, gp), (pi, gi)) => (pi && pp, (pi && gp) || gi)
     }
 
-    io.sum := sum.asUInt
-    io.cout := carry(n)
+    val cs = pgs.map(_._2)
+    val ps = pairs.map(_._1).drop(1) :+ false.B
+
+    val ss = ps.zip(cs).map {case (p, c) => p ^ c}
+
+    io.sum := VecInit(ss.slice(0, width)).asUInt
+    io.cout := ss(width).asUInt
 }
