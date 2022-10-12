@@ -2,28 +2,10 @@ package fpu
 
 import chisel3._
 
+// implementation directly taken from https://raw.githubusercontent.com/chisel-lang/ccc19/master/jack-higher.pdf
+
 trait PrefixSum {
     def apply[T](summands: Seq[T]) (associativeOp: (T, T) => T) : Vector[T]
-}
-
-object RipplePrefixSum extends PrefixSum {
-    def apply[T](summands: Seq[T]) (associativeOp: (T, T) => T) : Vector[T] = {
-        def helper(offset: Int, x: Vector[T]) : Vector[T] = {
-            if (offset >= x.size) {
-                x
-            } else {
-                val layer = Vector.tabulate(x.size) { i =>
-                    if (i != offset) {
-                        x(i)
-                    } else {
-                        associativeOp(x(i-1), x(i))
-                    }
-                }
-                helper (offset+1, layer) }
-        }
-
-        helper(1, summands.toVector)
-    }
 }
 
 object DensePrefixSum extends PrefixSum {

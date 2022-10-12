@@ -5,7 +5,7 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 
-class AdderSpec extends AnyFlatSpec with ChiselScalatestTester {
+class KsaSpec extends AnyFlatSpec with ChiselScalatestTester {
     behavior of "Adder"
 
     it should "Add without cout" in {

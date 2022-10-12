@@ -3,6 +3,7 @@ package fpu
 import chisel3._
 
 // Refer to this SO https://stackoverflow.com/questions/8981913/how-to-perform-round-to-even-with-floating-point-numbers
+
 class Rtne(val inSize:Int, val expSize:Int) extends Module { 
     val outSize = inSize - 3
 

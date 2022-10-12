@@ -3,6 +3,8 @@ package fpu
 import chisel3._
 import chisel3.util._
 
+// Implementation follows this research paper: https://www.researchgate.net/publication/284919835_Modular_Design_Of_Fast_Leading_Zeros_Counting_Circuit
+
 class NLC extends Module {
     val io = IO(new Bundle {
         val in = Input(UInt(4.W))

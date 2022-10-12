@@ -3,7 +3,6 @@ package fpu
 import chisel3._
 import chisel3.util._
 
-// Takes one clock cycle to setup and two clock cycles per bit it shift and add
 class Multiplier(val w: Int) extends Module {
     val io = IO(new Bundle {
         val a = Input(UInt(w.W))
