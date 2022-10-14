@@ -3,25 +3,27 @@ package fpu
 import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers._
 import chiseltest.simulator.WriteVcdAnnotation
 
 
-class MultiplierSpec extends AnyFlatSpec with ChiselScalatestTester {
-    behavior of "Multiplier"
+class FourToTwoReducerSpec extends AnyFlatSpec with ChiselScalatestTester {
+    behavior of "FourToTwoReducer"
 
-    it should "Multiply" in {
-        test (new Multiplier(32)).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
-            c.io.a.poke(32.U)
-            c.io.x.poke(2.U)
-            c.clock.step(65)
-            c.io.p.expect(64.U)
-        }
+    it should "Reduce 4 to 2" in {
+        test (new FourToTwoReducer(32)) { c => 
+            val r = scala.util.Random
+            val ns = for (i <- 0 until 4) yield (r.nextInt(1000)) 
 
-        test (new Multiplier(32)).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
-            c.io.a.poke(64.U)
-            c.io.x.poke(2.U)
-            c.clock.step(65)
-            c.io.p.expect(128.U)
+            c.io.a.poke(ns(0).U)
+            c.io.b.poke(ns(1).U)
+            c.io.c.poke(ns(2).U)
+            c.io.d.poke(ns(3).U)
+            
+            val S = c.io.S.peek().litValue
+            val C = c.io.C.peek().litValue
+        
+            (S+C) shouldBe (ns.sum)
         }
     }
 }

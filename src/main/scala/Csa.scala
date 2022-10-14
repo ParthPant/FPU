@@ -49,5 +49,16 @@ class CarrySaveAdder(val width: Int) extends Module {
     }
 
     io.S := Ss.asUInt
-    io.C := Cs.asUInt
+    io.C := Cs.asUInt<<1
+}
+
+object CarrySaveAdder {
+    def apply (width: Int) (a: UInt, b: UInt, c: UInt) = {
+        val csa = Module (new CarrySaveAdder(width))
+        csa.io.a := a
+        csa.io.b := b
+        csa.io.c := c
+
+        (csa.io.S, csa.io.C)
+    }
 }

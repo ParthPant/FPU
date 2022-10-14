@@ -46,6 +46,12 @@ class ClzSpec extends AnyFlatSpec with ChiselScalatestTester {
         }
 
         test (new CLZ32) { c =>
+            c.io.in.poke("h00000001".U)
+            c.io.Z.expect(31.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ32) { c =>
             c.io.in.poke("h0002FFFF".U)
             c.io.Z.expect(14.U)
             c.io.a.expect(0.U)
