@@ -47,6 +47,35 @@ object GPTGen {
     }
 }
 
+class ReduceNibble extends Module {
+    val io = IO(new Bundle {
+        val gptin = Input(Vec(4, new GPT))
+        val gptout = Output(Vec(4, new GPT))
+    })
+
+    val gptin0 = io.gptin(0)
+    val gptout0 = gptin0
+
+    val gptin1 = io.gptin(1)
+    val gptout1 = GPTInit(gptin1.g | (gptin0.g & gptin1.p), gptin1.p & gptin0.p, gptin1.t)
+
+    val gptin2 = io.gptin(2)
+    val gptout2 = GPTInit(gptin2.g | (gptin2.p & gptin1.g) | (gptin0.g & gptin1.p & gptin2.p), gptin2.p & gptin1.p & gptin0.p, gptin2.t)
+
+    val gptin3 = io.gptin(3)
+    val gptout3 = GPTInit(gptin3.g | (gptin3.p & gptin2.g) | (gptin3.p & gptin2.p & gptin1.g) | (gptin0.g & gptin1.p & gptin2.p & gptin3.p), gptin3.p & gptin2.p & gptin1.p & gptin0.p, gptin3.t)
+
+    io.gptout := VecInit(gptout0, gptout1, gptout2, gptout3)
+}
+
+object ReduceNibble {
+    def apply(gptin: Vec[GPT]) = {
+        val mod = Module( new ReduceNibble )
+        mod.io.gptin := gptin
+        mod.io.gptout
+    }
+}
+
 object ParallelPrefixTree {
     def apply[T](summands: Seq[T])(associativeOp: (T, T) => T) : Vector[T] = {
         def helper(offset: Int, x: Vector[T]) : Vector[T] = {
@@ -69,64 +98,6 @@ object ParallelPrefixTree {
     }
 }
 
-class Reduce(val width: Int, val valency: Int) extends Module {
-    val io = IO(new Bundle {
-        val gptin  = Input (Vec(width, new GPT))
-        val gptout = Output(Vec(width, new GPT))
-    })
-
-    if (valency == 1) {
-        val gpts = ParallelPrefixTree(io.gptin) {
-            case (gpti, gptj) => GPTInit(gpti.g | (gpti.p & gptj.g), gpti.p & gptj.p, gpti.t)
-        }
-        io.gptout := VecInit(gpts)
-    } else {
-        val groups = io.gptin.grouped(valency).toVector.map{ case group => Reduce(valency, 1)(VecInit(group)) }
-        val gpts = ParallelPrefixTree(groups) {
-            case (grpi, grpj) => {
-                val gptj = grpj.last
-                VecInit(grpi.map{ case gpti => GPTInit (gpti.g | (gpti.p & gptj.g), gpti.p & gptj.p, gpti.t) })
-            }
-        }.flatten
-        io.gptout := VecInit(gpts)
-    }
-}
-
-object Reduce {
-    def apply(width: Int, valency: Int)(gpts: Vec[GPT]) = {
-        val mod = Module (new Reduce(width, valency))
-        mod.io.gptin := gpts
-        mod.io.gptout
-    }
-}
-
-class FastAdder(val width: Int, val valency: Int) extends Module {
-    val io = IO(new Bundle {
-        val a = Input(UInt(width.W))
-        val b = Input(UInt(width.W))
-        val cin = Input(UInt(1.W))
-
-        val Sum = Output(UInt(width.W))
-        val Cout = Output(UInt(1.W))
-    })
-
-    val gpts_0 = GPTGen(width)(io.a, io.b)
-    val gpts_last = Reduce(width, valency)(gpts_0)
-
-    val gs = gpts_last.map(_.g)
-    val ps = gpts_last.map(_.p)
-    val ts = gpts_last.map(_.t)
-
-    val cs = io.cin +: gs.zip(ps).map{ case (gi, pi) => gi | (pi & io.cin.asBool) }
-
-    val ss = for (i <- 0 until width) yield {
-        cs(i) ^ ts(i)
-    }
-
-    io.Sum := VecInit(ss).asUInt
-    io.Cout := cs.last
-}
-
 class FastAdderPipelined(val width: Int) extends Module {
     val io = IO(new Bundle {
         val a = Input(UInt(width.W))
@@ -140,9 +111,7 @@ class FastAdderPipelined(val width: Int) extends Module {
     val gpts_0 = GPTGen(width)(io.a, io.b)
 
     val groups = VecInit(gpts_0.grouped(4).toVector.map{
-        case group => VecInit(ParallelPrefixTree(group) {
-            case (gpti, gptj) => GPTInit(gpti.g | (gpti.p & gptj.g), gpti.p & gptj.p, gpti.t)
-        })
+        case group => ReduceNibble(VecInit(group))
     })
 
     def reduce(gpts: Vec[Vec[GPT]], cin: Bool) : (Vec[Vec[GPT]], Bool) = {

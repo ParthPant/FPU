@@ -8,38 +8,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 import chiseltest.simulator.WriteVcdAnnotation
 
-class FastAdderSpec extends AnyFlatSpec with ChiselScalatestTester {
-    behavior of "FastAdder"
-
-    val r = scala.util.Random
-    for (w <- List(8, 16, 32, 64)) {
-        val hi = BigInt(2).pow(w)
-        for (v <- List(1, 2, 4)) {
-            it should s"Add $w bit numbers with valency $v" in {
-                test (new FastAdder(w, v)) { c =>
-                    for (i <- 1 to 50) {
-                        val a = BigInt(w, r)
-                        val b = BigInt(w, r)
-                        val cin = r.nextInt(2)
-                        val cout = if (a + b + cin >=  hi) 1 else 0
-                        val sum = (a+b+cin) & (hi-1) 
-
-                        // println(s"$a + $b + $cin = $sum, Cout = $cout")
-
-                        c.io.a.poke(a.U)
-                        c.io.b.poke(b.U)
-                        c.io.cin.poke(cin.U)
-
-                        c.io.Sum.expect(sum.U)
-                        c.io.Cout.expect(cout.U)
-                    }
-                }
-                // println("-------------------------------------------")
-            }
-        }
-    }
-}
-
 class FastAdderPipelinedSpec extends AnyFlatSpec with ChiselScalatestTester {
     behavior of "FastAdderPipelined"
 
