@@ -13,7 +13,7 @@ class NLC extends Module {
     })
 
     val ins = io.in.asBools
-    val Zs = VecInit(~((~io.in(2) & io.in(1)) || io.in(3)), ~(io.in(2) || io.in(3)))
+    val Zs = VecInit(~((~ins(2) & ins(1)) || ins(3)), ~(ins(2) || ins(3)))
 
     io.a := ~(ins.reduce(_ || _))
     io.Z := Zs.asUInt
@@ -47,8 +47,8 @@ class CLZ32 extends Module {
 
     val out = Cat(BNEout, MUXout)
 
-    io.a := out(4)
-    io.Z := VecInit(out.asBools.slice(0, 4)).asUInt
+    io.a := ~as.reduce(_ || _).asUInt
+    io.Z := VecInit(out.asBools).asUInt
 }
 
 class CLZ64 extends Module {
