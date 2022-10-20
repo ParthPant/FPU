@@ -19,6 +19,64 @@ class NLC extends Module {
     io.Z := Zs.asUInt
 }
 
+class CLZ16 extends Module {
+    val io = IO(new Bundle {
+      val in = Input(UInt(16.W))
+      val Z = Output(UInt(4.W))
+      val a = Output(UInt(1.W))
+    })
+
+    val ins = io.in.asBools
+
+    val zs = Wire(Vec(4, UInt(2.W)))
+    val as = Wire(Vec(4, Bool()))
+    
+    for (i <- 0 until 4) {
+        val mod = Module (new NLC)
+        val j = 3 - i
+        mod.io.in := VecInit(ins.slice(4*j, 4*j+4)).asUInt
+        zs(i) := mod.io.Z
+        as(i) := ~(mod.io.a.asBool)
+    }
+
+    val BNEout = PriorityEncoder(as.asUInt)
+    val MUXout = PriorityMux(as.zip(zs))
+
+    val out = Cat(BNEout, MUXout)
+
+    io.a := ~as.reduce(_ || _).asUInt
+    io.Z := VecInit(out.asBools).asUInt
+}
+
+class CLZ24 extends Module {
+    val io = IO(new Bundle {
+      val in = Input(UInt(24.W))
+      val Z = Output(UInt(5.W))
+      val a = Output(UInt(1.W))
+    })
+
+    val ins = io.in.asBools
+
+    val zs = Wire(Vec(6, UInt(2.W)))
+    val as = Wire(Vec(6, Bool()))
+    
+    for (i <- 0 until 6) {
+        val mod = Module (new NLC)
+        val j = 5 - i
+        mod.io.in := VecInit(ins.slice(4*j, 4*j+4)).asUInt
+        zs(i) := mod.io.Z
+        as(i) := ~(mod.io.a.asBool)
+    }
+
+    val BNEout = PriorityEncoder(as.asUInt)
+    val MUXout = PriorityMux(as.zip(zs))
+
+    val out = Cat(BNEout, MUXout)
+
+    io.a := ~as.reduce(_ || _).asUInt
+    io.Z := VecInit(out.asBools).asUInt
+}
+
 class CLZ32 extends Module {
     val io = IO(new Bundle {
         val in = Input(UInt(32.W))
@@ -34,6 +92,35 @@ class CLZ32 extends Module {
     for (i <- 0 until 8) {
         val mod = Module (new NLC)
         val j = 7 - i
+        mod.io.in := VecInit(ins.slice(4*j, 4*j+4)).asUInt     
+        zs(i) := mod.io.Z
+        as(i) := ~(mod.io.a.asBool)
+    }
+
+    val BNEout = PriorityEncoder(as.asUInt)
+    val MUXout = PriorityMux(as.zip(zs))
+
+    val out = Cat(BNEout, MUXout)
+
+    io.a := ~as.reduce(_ || _).asUInt
+    io.Z := VecInit(out.asBools).asUInt
+}
+
+class CLZ48 extends Module {
+    val io = IO(new Bundle {
+        val in = Input(UInt(48.W))
+        val Z = Output(UInt(6.W))
+        val a = Output(UInt(1.W))
+    })
+
+    val ins = io.in.asBools
+
+    val zs = Wire(Vec(12, UInt(2.W)))
+    val as = Wire(Vec(12, Bool()))
+
+    for (i <- 0 until 12) {
+        val mod = Module (new NLC)
+        val j = 11 - i
         mod.io.in := VecInit(ins.slice(4*j, 4*j+4)).asUInt     
         zs(i) := mod.io.Z
         as(i) := ~(mod.io.a.asBool)

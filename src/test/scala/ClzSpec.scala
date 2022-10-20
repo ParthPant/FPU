@@ -38,6 +38,80 @@ class ClzSpec extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
 
+    it should "Count Leading Zeros 16-bit" in {
+        test (new CLZ16) { c =>
+            c.io.in.poke("h004F".U)
+            c.io.Z.expect(9.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ16) { c =>
+            c.io.in.poke("h0001".U)
+            c.io.Z.expect(15.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ16) { c =>
+            c.io.in.poke("hFFFF".U)
+            c.io.Z.expect(0.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ16) { c =>
+            c.io.in.poke("h4FFF".U)
+            c.io.Z.expect(1.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ16) { c =>
+            c.io.in.poke("h0FFF".U)
+            c.io.Z.expect(4.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ16) { c =>
+            c.io.in.poke("h0000".U)
+            c.io.a.expect(1.U)
+        }
+    }
+
+    it should "Count Leading Zeros 24-bit" in {
+        test (new CLZ24) { c =>
+            c.io.in.poke("h3FFFFF".U)
+            c.io.Z.expect(2.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ24) { c =>
+            c.io.in.poke("h000001".U)
+            c.io.Z.expect(23.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ24) { c =>
+            c.io.in.poke("h02FFFF".U)
+            c.io.Z.expect(6.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ24) { c =>
+            c.io.in.poke("h04FFFF".U)
+            c.io.Z.expect(5.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ24) { c =>
+            c.io.in.poke("hF2FFFF".U)
+            c.io.Z.expect(0.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ24) { c =>
+            c.io.in.poke("h000000".U)
+            c.io.a.expect(1.U)
+        }
+    }
+
     it should "Count Leading Zeros 32-bit" in {
         test (new CLZ32) { c =>
             c.io.in.poke("h003FFFFF".U)
@@ -71,6 +145,37 @@ class ClzSpec extends AnyFlatSpec with ChiselScalatestTester {
 
         test (new CLZ32) { c =>
             c.io.in.poke("h00000000".U)
+            c.io.a.expect(1.U)
+        }
+    }
+
+    it should "Count Leading Zeros 48-bit" in {
+        test (new CLZ48) { c =>
+            c.io.in.poke("h0FFF003FFFFF".U)
+            c.io.Z.expect(4.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ48) { c =>
+            c.io.in.poke("h00000002FFFF".U)
+            c.io.Z.expect(30.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ48) { c =>
+            c.io.in.poke("h100000000000".U)
+            c.io.Z.expect(3.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ48) { c =>
+            c.io.in.poke("h0000C50A0000".U)
+            c.io.Z.expect(16.U)
+            c.io.a.expect(0.U)
+        }
+
+        test (new CLZ48) { c =>
+            c.io.in.poke("h000000000000".U)
             c.io.a.expect(1.U)
         }
     }
