@@ -28,18 +28,15 @@ class CLZ32 extends Module {
 
     val ins = io.in.asBools
 
-    val NLCs = for (i <- 0 until 8) yield {
-        Module (new NLC)
-    }
-
     val zs = Wire(Vec(8, UInt(2.W)))
     val as = Wire(Vec(8, Bool()))
 
     for (i <- 0 until 8) {
+        val mod = Module (new NLC)
         val j = 7 - i
-        NLCs(i).io.in := VecInit(ins.slice(4*j, 4*j+4)).asUInt     
-        zs(i) := NLCs(i).io.Z
-        as(i) := ~(NLCs(i).io.a.asBool)
+        mod.io.in := VecInit(ins.slice(4*j, 4*j+4)).asUInt     
+        zs(i) := mod.io.Z
+        as(i) := ~(mod.io.a.asBool)
     }
 
     val BNEout = PriorityEncoder(as.asUInt)

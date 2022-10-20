@@ -2,17 +2,17 @@ package fpu
 
 import chisel3._
 
-class FastAdderPipelined(val width: Int) extends Module {
+class FastSubtractorPipelined(val width: Int) extends Module {
     val io = IO(new Bundle {
         val a = Input(UInt(width.W))
         val b = Input(UInt(width.W))
         val cin = Input(UInt(1.W))
 
-        val Sum = Output(UInt(width.W))
+        val Diff = Output(UInt(width.W))
         val Cout = Output(UInt(1.W))
     })
 
-    val gpts_0 = GPTGen(width)(io.a, io.b)
+    val gpts_0 = GPTGen(width)(~io.a, io.b)
 
     val groups = VecInit(gpts_0.grouped(4).toVector.map{
         case group => ReduceNibble(VecInit(group))
@@ -55,6 +55,6 @@ class FastAdderPipelined(val width: Int) extends Module {
         cs(i) ^ ts(i)
     }
 
-    io.Sum := RegNext(VecInit(ss).asUInt)
+    io.Diff := RegNext(~VecInit(ss).asUInt)
     io.Cout := RegNext(cs.last)
 }
