@@ -127,7 +127,7 @@ class FastAdder(val width: Int, val valency: Int) extends Module {
     io.Cout := cs.last
 }
 
-class FastAdderPipelined(val width: Int) extends Module {
+class FastAdderPipelined(val width: Int, val stages: List[Int]) extends Module {
     val io = IO(new Bundle {
         val a = Input(UInt(width.W))
         val b = Input(UInt(width.W))
@@ -146,9 +146,11 @@ class FastAdderPipelined(val width: Int) extends Module {
     })
 
     def reduce(gpts: Vec[Vec[GPT]], cin: Bool) : (Vec[Vec[GPT]], Bool) = {
-        def nextLayer(prev: Vec[Vec[GPT]], cin: Bool, offset: Int) : (Vec[Vec[GPT]], Bool) = {
+        def nextLayer(prev: Vec[Vec[GPT]], cin: Bool, offset: Int, depth: Int) : (Vec[Vec[GPT]], Bool) = {
             if (offset > prev.size) {
-                (RegNext(prev), RegNext(cin))
+                if (stages.contains(depth))
+                  (RegNext(prev), RegNext(cin))
+                else (prev, cin)
             } else {
                 val layer = VecInit(Vector.tabulate(prev.size) { i =>
                     if (i < offset) {
@@ -160,13 +162,13 @@ class FastAdderPipelined(val width: Int) extends Module {
                     }
                 })
 
-                val reg = RegNext(layer)
-                val cinreg = RegNext(cin)
-                nextLayer(reg, cinreg, offset<<1)
+                val reg = if (stages.contains(depth))  RegNext(layer) else layer
+                val cinreg = if (stages.contains(depth)) RegNext(cin) else cin
+                nextLayer(reg, cinreg, offset<<1, depth+1)
             }
         }
 
-        nextLayer(gpts, cin, 1)
+        nextLayer(gpts, cin, 1, 1)
     }
 
     val (grps_last, cin) = reduce(groups, io.cin.asBool)
@@ -182,6 +184,6 @@ class FastAdderPipelined(val width: Int) extends Module {
         cs(i) ^ ts(i)
     }
 
-    io.Sum := RegNext(VecInit(ss).asUInt)
-    io.Cout := RegNext(cs.last)
+    io.Sum := VecInit(ss).asUInt
+    io.Cout := cs.last
 }
