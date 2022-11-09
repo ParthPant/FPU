@@ -6,14 +6,15 @@ import chisel3.util._
 class Unpack32 extends Module {
     val io = IO(new Bundle {
         val in = Input(UInt(32.W))
-        val s = Output(UInt(1.W))
-        val e = Output(UInt(8.W))
-        val f = Output(UInt(24.W))
+        val out = Output(new FloatingPoint)
     })
 
     val ins = io.in.asBools
+    val out = Wire(new FloatingPoint)
 
-    io.s := ins(31)
-    io.e :=  VecInit(ins.slice(23, 32)).asUInt
-    io.f := Cat(1.U, VecInit(ins.slice(0, 23)).asUInt)
+    out.sign := ins(31)
+    out.exp :=  VecInit(ins.slice(23, 32)).asUInt
+    out.mant := Cat(1.U, VecInit(ins.slice(0, 23)).asUInt)
+
+    io.out := out
 }

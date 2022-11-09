@@ -74,3 +74,9 @@ object ReduceNibble {
         mod.io.gptout
     }
 }
+
+class FloatingPoint extends Bundle {
+  val mant = UInt(24.W)
+  val exp = UInt(8.W)
+  val sign = UInt(1.W)
+}

@@ -12,9 +12,9 @@ class Unpack32Spec extends AnyFlatSpec with ChiselScalatestTester {
             val input = "b11010110011110000111100001010101".U
 
             c.io.in.poke(input)
-            c.io.s.expect(1.U)
-            c.io.e.expect("b10101100".U)
-            c.io.f.expect("b111110000111100001010101".U)
+            c.io.out.sign.expect(1.U)
+            c.io.out.exp.expect("b10101100".U)
+            c.io.out.mant.expect("b111110000111100001010101".U)
         }
     }
 }
