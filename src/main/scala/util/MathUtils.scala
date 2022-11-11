@@ -9,11 +9,27 @@ class GPT extends Bundle {
 }
 
 object GPTInit {
-    def apply(g: UInt, p: UInt, t: UInt) = {
+    def apply(g: UInt, p: UInt, t: UInt) : GPT = {
         val bun = Wire(new GPT)
         bun.g := g
         bun.p := p
         bun.t := t
+        bun
+    }
+}
+
+class FloatingPoint extends Bundle {
+    val mant = UInt(24.W)
+    val exp = UInt(8.W)
+    val sign = UInt(1.W)
+}
+
+object FloatingPointInit {
+    def apply(sign: UInt, mant: UInt, exp: UInt) : FloatingPoint = {
+        val bun = Wire(new FloatingPoint)
+        bun.sign := sign
+        bun.mant := mant
+        bun.exp := exp
         bun
     }
 }
@@ -73,10 +89,4 @@ object ReduceNibble {
         mod.io.gptin := gptin
         mod.io.gptout
     }
-}
-
-class FloatingPoint extends Bundle {
-  val mant = UInt(24.W)
-  val exp = UInt(8.W)
-  val sign = UInt(1.W)
 }

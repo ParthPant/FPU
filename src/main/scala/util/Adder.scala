@@ -58,3 +58,14 @@ class FastAdderPipelined(val width: Int) extends Module {
     io.Sum := RegNext(VecInit(ss).asUInt)
     io.Cout := RegNext(cs.last)
 }
+
+object FastAdderPipelined {
+    def apply (width: Int) (a: UInt, b: UInt, cin: UInt) : (UInt, UInt) = {
+        val mod = Module (new FastAdderPipelined(width))
+        mod.io.a := a
+        mod.io.b := b
+        mod.io.cin := cin
+
+        (mod.io.Sum, mod.io.Cout)
+    }
+}

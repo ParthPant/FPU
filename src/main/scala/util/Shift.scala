@@ -29,6 +29,16 @@ class ShiftRight(val width: Int) extends Module {
     io.out := tree(io.a, io.shift)
 }
 
+object ShiftRight {
+    def apply (width: Int) (a: UInt, shift: UInt) : UInt = {
+        val mod = Module(new ShiftRight(width))
+        mod.io.a := a
+        mod.io.shift := shift
+
+        mod.io.out
+    }
+}
+
 class ShiftLeft(val width: Int) extends Module {
     val shiftw = log2Up(width)
     val io = IO(new Bundle {
@@ -51,4 +61,14 @@ class ShiftLeft(val width: Int) extends Module {
     }
 
     io.out := tree(io.a, io.shift)
+}
+
+object ShiftLeft {
+    def apply (width: Int) (a: UInt, shift: UInt) : UInt = {
+        val mod = Module(new ShiftLeft(width))
+        mod.io.a := a
+        mod.io.shift := shift
+
+        mod.io.out
+    }
 }
