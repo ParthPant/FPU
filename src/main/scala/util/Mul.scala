@@ -19,24 +19,26 @@ class ArrayMultiplier(val width : Int) extends Module {
     val pl = Wire(Vec(width, Bool()))
     val ph = Wire(Vec(width, Bool()))
 
-    def makeTree(a: Seq[Bool], b: Seq[Bool]) : Seq[(Bool, Bool)] = {
-        def nextLayer(prev: Seq[(Bool, Bool)], depth: Int) : Seq[(Bool, Bool)] = {
+    def makeTree(a: UInt, b: UInt) : (UInt, UInt) = {
+        def nextLayer(prev: (UInt, UInt), depth: Int) : (UInt, UInt) = {
             if (depth < width) {
-                val next = Seq.tabulate(width)(n => FA(if (n < width-1) prev(n+1)._1 else 0.B, a(n) & b(depth), prev(n)._2))
-                pl(depth) := next(0)._1
-                nextLayer(next, depth+1)
+                val next = Seq.tabulate(width)(n => FA(if (n < width-1) prev._1(n+1) else 0.B, a(n) & b(depth), prev._2(n)))
+                val s = VecInit(next.map(_._1)).asUInt
+                val c = VecInit(next.map(_._2)).asUInt
+                pl(depth) := s(0)
+                nextLayer((s, c), depth+1)
             } else {
-                val x = Cat(0.B, VecInit(prev.drop(1).map(_._1)).asUInt)
-                val y = VecInit(prev.map(_._2)).asUInt
+                val x = Cat(0.B, prev._1(width-1, 1))
+                val y = prev._2
                 val (s, c) = RippleCarryAdder(width)(x, y, 0.U) 
                 ph := s.asBools
-                s.asBools.zip(c.asBools)
+                (s, c) 
             }
         }
-        nextLayer(Seq.fill(width)((0.B,0.B)), 0)
+        nextLayer((0.U,0.U), 0)
     }
 
-    makeTree(as, bs)
+    makeTree(io.a, io.b)
 
     io.P := Cat(ph.asUInt, pl.asUInt)
 }
