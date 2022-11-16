@@ -1,6 +1,7 @@
 package fpu
 
 import chisel3._
+import chisel3.experimental.BundleLiterals._
 
 class GPT extends Bundle {
     val g = UInt(1.W)
@@ -24,7 +25,7 @@ class FloatingPoint extends Bundle {
     val sign = UInt(1.W)
 }
 
-object FloatingPointInit {
+object FloatingPoint {
     def apply(sign: UInt, mant: UInt, exp: UInt) : FloatingPoint = {
         val bun = Wire(new FloatingPoint)
         bun.sign := sign
@@ -32,6 +33,26 @@ object FloatingPointInit {
         bun.exp := exp
         bun
     }
+
+    def open(fp: FloatingPoint) : Float = {
+        val sign = fp.sign.litValue.toInt
+        val exp = fp.exp.litValue.toInt
+        val mant = fp.mant.litValue.toInt
+
+        val res = (sign<<31) | (exp<<23) | (mant & 0x7FFFFF)
+        java.lang.Float.intBitsToFloat(res)
+    }
+
+    def make(num: Float) = {
+        val n = java.lang.Float.floatToIntBits(num.abs)
+        val sign = if (num < 0) 1 else 0
+        val exp = (n>>23) & 0xFF
+        val mant = (1<<23) | (n&0x7FFFFF)
+
+        val floatingPoint = new FloatingPoint 
+        floatingPoint.Lit(_.sign -> sign.U, _.exp -> exp.U, _.mant -> mant.U)
+    }
+
 }
 
 class GPTGen(val width: Int) extends Module {
