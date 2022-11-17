@@ -14,7 +14,7 @@ class Unpack32 extends Module {
 
     out.sign := ins(31)
     out.exp :=  VecInit(ins.slice(23, 32)).asUInt
-    out.mant := Cat(1.U, VecInit(ins.slice(0, 23)).asUInt)
+    out.significand := Cat(1.U, VecInit(ins.slice(0, 23)).asUInt)
 
     io.out := out
 }

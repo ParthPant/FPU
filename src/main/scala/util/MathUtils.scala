@@ -20,7 +20,7 @@ object GPTInit {
 }
 
 class FloatingPoint extends Bundle {
-    val mant = UInt(24.W)
+    val significand = UInt(24.W)
     val exp = UInt(8.W)
     val sign = UInt(1.W)
 }
@@ -29,7 +29,7 @@ object FloatingPoint {
     def apply(sign: UInt, mant: UInt, exp: UInt) : FloatingPoint = {
         val bun = Wire(new FloatingPoint)
         bun.sign := sign
-        bun.mant := mant
+        bun.significand := mant
         bun.exp := exp
         bun
     }
@@ -37,7 +37,7 @@ object FloatingPoint {
     def open(fp: FloatingPoint) : Float = {
         val sign = fp.sign.litValue.toInt
         val exp = fp.exp.litValue.toInt
-        val mant = fp.mant.litValue.toInt
+        val mant = fp.significand.litValue.toInt
 
         val res = (sign<<31) | (exp<<23) | (mant & 0x7FFFFF)
         java.lang.Float.intBitsToFloat(res)
@@ -50,7 +50,7 @@ object FloatingPoint {
         val mant = (1<<23) | (n&0x7FFFFF)
 
         val floatingPoint = new FloatingPoint 
-        floatingPoint.Lit(_.sign -> sign.U, _.exp -> exp.U, _.mant -> mant.U)
+        floatingPoint.Lit(_.sign -> sign.U, _.exp -> exp.U, _.significand -> mant.U)
     }
 
 }

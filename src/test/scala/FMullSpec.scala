@@ -6,8 +6,9 @@ import org.scalatest.flatspec.AnyFlatSpec
 import chiseltest.simulator.WriteVcdAnnotation
 import scala.collection.mutable.ListBuffer
 import org.scalatest.matchers.should.Matchers._
+import com.typesafe.scalalogging.LazyLogging
 
-class FMulSpec extends AnyFlatSpec with ChiselScalatestTester {
+class FMulSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
     behavior of "FMul" 
 
     val r = scala.util.Random
@@ -62,11 +63,12 @@ class FMulSpec extends AnyFlatSpec with ChiselScalatestTester {
             val av = dels.sum / dels.size
             val max = dels.max
             val min = dels.min
-            val sigma = scala.math.pow((dels.map(x => (x - av)*(x-av)).sum / dels.size), 0.5)
-            println(s"average error : ${dels.sum / dels.size}")
-            println(s"max error     : ${dels.max}")
-            println(s"min error     : ${dels.min}")
-            println(s"sigma         : ${sigma}")
+            val stddiv = scala.math.pow((dels.map(x => (x - av)*(x-av)).sum / dels.size), 0.5)
+
+            logger.info(s"average error : ${dels.sum / dels.size}")
+            logger.info(s"max error     : ${dels.max}")
+            logger.info(s"min error     : ${dels.min}")
+            logger.info(s"std div       : ${stddiv}")
         }
     }
 }

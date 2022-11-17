@@ -11,20 +11,11 @@ class FMul extends Module {
         val out = Output(new FloatingPoint)
     }) 
 
-    def delay[T <: Data](data: T, t: Int): T = {
-        def makereg(data: T, n: Int): T = {
-            if (n < t)
-                makereg(RegNext(data), n+1)
-            else 
-                data
-        }
-        makereg(data, 0)
-    }
-    val signout = delay(io.a.sign ^ io.b.sign, 8)
+    val signout = Delay(io.a.sign ^ io.b.sign, 8)
 
     val multiplier = Module(new ArrayMultiplier(24, List(6, 12, 18)))
-    multiplier.io.a := io.a.mant
-    multiplier.io.b := io.b.mant
+    multiplier.io.a := io.a.significand
+    multiplier.io.b := io.b.significand
     val multreg = RegNext(multiplier.io.P) // 4
 
     val clz = Module(new CLZ48)
@@ -60,6 +51,6 @@ class FMul extends Module {
     val subout = subtractor2.io.Diff
     
     io.out.exp := subout
-    io.out.mant := shiftout(47, 24)
+    io.out.significand := shiftout(47, 24)
     io.out.sign := signout 
 }

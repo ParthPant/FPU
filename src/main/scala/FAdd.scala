@@ -30,17 +30,17 @@ class ClosePath extends Module {
     val y0 = Mux(xgty, io.y, io.x)
     val x = Mux(xgty, io.x, io.y)
 
-    val y = FloatingPoint(y0.sign, ShiftRight(24)(y0.mant, x.exp - y0.exp), x.exp)
+    val y = FloatingPoint(y0.sign, ShiftRight(24)(y0.significand, x.exp - y0.exp), x.exp)
 
-    val (sum, cout) = FastAdderPipelined(24)(x.mant, y.mant, 0.U)
+    val (sum, cout) = FastAdderPipelined(24)(x.significand, y.significand, 0.U)
     val out = Wire(new FloatingPoint)
 
     out.sign := 0.U
     when (cout.asBool) {
-        out.mant := Cat(1.U, sum(23, 1))
+        out.significand := Cat(1.U, sum(23, 1))
         out.exp := x.exp + 1.U
     } .otherwise {
-        out.mant := sum
+        out.significand := sum
         out.exp := x.exp
     }
 
