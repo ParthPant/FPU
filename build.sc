@@ -19,6 +19,8 @@ object %NAME% extends SbtModule { m =>
   )
   override def ivyDeps = Agg(
     ivy"edu.berkeley.cs::chisel3:3.5.1",
+    ivy"com.typesafe.scala-logging::scala-logging:3.9.4",
+    ivy"ch.qos.logback:logback-classic:1.2.3"
   )
   override def scalacPluginIvyDeps = Agg(
     ivy"edu.berkeley.cs:::chisel3-plugin:3.5.1",
