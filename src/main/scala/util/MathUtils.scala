@@ -35,12 +35,12 @@ object FloatingPoint {
     }
 
     def open(fp: FloatingPoint) : Float = {
-        val sign = fp.sign.litValue.toInt
-        val exp = fp.exp.litValue.toInt
-        val mant = fp.significand.litValue.toInt
+        val sign = fp.sign.litValue
+        val exp = fp.exp.litValue
+        val mant = fp.significand.litValue
 
         val res = (sign<<31) | (exp<<23) | (mant & 0x7FFFFF)
-        java.lang.Float.intBitsToFloat(res)
+        java.lang.Float.intBitsToFloat(res.toInt)
     }
 
     def make(num: Float) = {

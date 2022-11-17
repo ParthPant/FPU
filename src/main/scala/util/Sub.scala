@@ -17,3 +17,14 @@ class FastSubtractorPipelined(val width: Int) extends Module {
     io.Diff := ~diff
     io.Cout := cout
 }
+
+object FastSubtractorPipelined {
+    def apply (width: Int) (a: UInt, b: UInt, cin: UInt) : (UInt, UInt) = {
+        val mod = Module (new FastSubtractorPipelined(width))
+        mod.io.a := a
+        mod.io.b := b
+        mod.io.cin := cin
+
+        (mod.io.Diff, mod.io.Cout)
+    }
+}

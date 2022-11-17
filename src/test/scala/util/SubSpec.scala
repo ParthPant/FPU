@@ -17,7 +17,7 @@ class FastSubtractorPipelinedSpec extends AnyFlatSpec with ChiselScalatestTester
 
     for (w <- List(8, 16, 32, 64)) { 
         it should s"Subtract $w-bit numbers" in {
-            for (i <- 1 to 50) {
+            for (i <- 1 to 5) {
                 val hi = BigInt(2).pow(w)
                 test (new FastSubtractorPipelined(w)).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
                     val a = BigInt(w, r)
@@ -25,7 +25,7 @@ class FastSubtractorPipelinedSpec extends AnyFlatSpec with ChiselScalatestTester
                     val cin = r.nextInt(2) 
                     val d = a-b-cin
                     val cout = if (d < 0) 1 else 0
-                    val diff = if (d < 0) {hi - d.abs } else  { d }
+                    val diff = if (d < 0) {hi - d.abs} else  { d }
                     val steps = 1 + log2(w/4).toInt
 
                     c.io.a.poke(a.U)
@@ -41,7 +41,7 @@ class FastSubtractorPipelinedSpec extends AnyFlatSpec with ChiselScalatestTester
         }
     }
 
-    val n = 20
+    val n = 5 
     for (w <- List(8, 16, 32, 64)) { 
         it should s"Subtract $n pipelined $w-bit numbers" in {
             val hi = BigInt(2).pow(w)
