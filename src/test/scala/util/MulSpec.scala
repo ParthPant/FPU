@@ -14,8 +14,8 @@ class ArrayMultiplierSpec extends AnyFlatSpec with ChiselScalatestTester {
     val n = 5
 
     for (w <- List(8, 16, 24, 32)) {
-        val stages = List.range(0, w-1) //List(w/3, 2*w/3)
-        val steps = stages.size + 1
+        val stages = List(w/3, 2*w/3)
+        val steps = stages.size
         val hi = BigInt(2).pow(w)
         it should s"Multiply $n $w-bit numbers in $steps cycles" in {
             test (new ArrayMultiplier(w, stages)).withAnnotations(Seq(WriteVcdAnnotation)) { c =>

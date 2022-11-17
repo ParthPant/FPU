@@ -73,15 +73,23 @@ class FastAdderPipelined(val width: Int) extends Module {
     })
 
     val gpts_0 = GPTGen(width)(io.a, io.b)
-
     val groups = VecInit(gpts_0.grouped(4).toVector.map{
         case group => ReduceNibble(VecInit(group))
     })
 
-    def reduce(gpts: Vec[Vec[GPT]], cin: Bool) : (Vec[Vec[GPT]], Bool) = {
-        def nextLayer(prev: Vec[Vec[GPT]], cin: Bool, offset: Int) : (Vec[Vec[GPT]], Bool) = {
+    def reduce(gpts: Vec[Vec[GPT]], cin: Bool) : (UInt, UInt) = {
+        def nextLayer(prev: Vec[Vec[GPT]], cin: Bool, offset: Int) : (UInt, UInt) = {
             if (offset > prev.size) {
-                (RegNext(prev), RegNext(cin))
+                val gpts_last = prev.flatten
+                val gs = gpts_last.map(_.g)
+                val ps = gpts_last.map(_.p)
+                val ts = gpts_last.map(_.t)
+
+                val cs = cin +: gs.zip(ps).map{ case (gi, pi) => gi | (pi & cin) }
+                val ss = for (i <- 0 until width) yield {
+                    cs(i) ^ ts(i)
+                }
+                (VecInit(ss).asUInt, cs.last.asUInt)
             } else {
                 val layer = VecInit(Vector.tabulate(prev.size) { i =>
                     if (i < offset) {
@@ -101,22 +109,10 @@ class FastAdderPipelined(val width: Int) extends Module {
 
         nextLayer(gpts, cin, 1)
     }
-
-    val (grps_last, cin) = reduce(groups, io.cin.asBool)
-    val gpts_last = grps_last.flatten
-
-    val gs = gpts_last.map(_.g)
-    val ps = gpts_last.map(_.p)
-    val ts = gpts_last.map(_.t)
-
-    val cs = cin +: gs.zip(ps).map{ case (gi, pi) => gi | (pi & cin) }
-
-    val ss = for (i <- 0 until width) yield {
-        cs(i) ^ ts(i)
-    }
-
-    io.Sum := RegNext(VecInit(ss).asUInt)
-    io.Cout := RegNext(cs.last)
+    
+    val (sum, cout) = reduce(groups, io.cin.asBool)
+    io.Sum := sum
+    io.Cout := cout
 }
 
 object FastAdderPipelined {

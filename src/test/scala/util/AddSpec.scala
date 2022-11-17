@@ -53,7 +53,7 @@ class FastAdderPipelinedSpec extends AnyFlatSpec with ChiselScalatestTester {
                     val cin = r.nextInt(2)
                     val cout = if (a + b + cin >=  hi) 1 else 0
                     val sum = (a+b+cin) & (hi-1) 
-                    val steps = 3 + log2(w/4).toInt
+                    val steps = 1 + log2(w/4).toInt
 
                     c.io.a.poke(a.U)
                     c.io.b.poke(b.U)
@@ -74,7 +74,7 @@ class FastAdderPipelinedSpec extends AnyFlatSpec with ChiselScalatestTester {
             test (new FastAdderPipelined(w)).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
                 val hi = BigInt(2).pow(w)
                 // 1 extra stage for group condense and another for carry-in sum
-                val steps = 3 + log2(w/4).toInt
+                val steps = 1 + log2(w/4).toInt
                 val ips = for (i <- 1 to n) yield { 
                     val a = BigInt(w, r)
                     val b = BigInt(w, r)

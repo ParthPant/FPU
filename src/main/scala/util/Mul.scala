@@ -46,5 +46,5 @@ class ArrayMultiplier(val width : Int, val stages: Seq[Int]) extends Module {
         nextLayer((a, b), (0.U,0.U), 0.U, 0)
     }
 
-    io.P := RegNext(makeTree(io.a, io.b))
+    io.P := makeTree(io.a, io.b)
 }
