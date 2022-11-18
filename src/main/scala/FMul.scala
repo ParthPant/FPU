@@ -26,7 +26,7 @@ class FMul extends Module {
     val shift = Module(new ShiftLeft(48))
     shift.io.a := multreg2
     shift.io.shift := leadingzreg
-    val shiftreg = RegNext(shift.io.out) // 6
+    val shiftreg = Delay(shift.io.out, 3) // 8
     val leadingzreg2 = RegNext(leadingzreg) // 6
 
     val adder = Module(new FastAdderPipelined(12))
@@ -45,9 +45,8 @@ class FMul extends Module {
     subtractor2.io.a := subreg
     subtractor2.io.b := leadingzreg2
     subtractor2.io.cin := 0.U
-    val shiftreg2 = RegNext(RegNext(shiftreg))
     
-    val shiftout = shiftreg2
+    val shiftout = shiftreg
     val subout = subtractor2.io.Diff
     
     io.out.exp := subout
