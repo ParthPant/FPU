@@ -96,9 +96,8 @@ class FastAdderPipelined(val width: Int) extends Module {
                     if (i < valency*groupoffset) {
                         prev(i)
                     } else {
-                        // println(s"$i -> ${i - i%4 - groupoffset*4 + 4 - 1}")
                         val (gpti, gptj) = (prev(i), prev(i - i%valency - groupoffset*valency + valency - 1))
-                        GPTInit(gpti.g | (gpti.p & gptj.g), gpti.p & gptj.p, gpti.t)
+                        gpti dot gptj
                     }
                 })
 

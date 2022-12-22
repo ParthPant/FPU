@@ -7,6 +7,8 @@ class GPT extends Bundle {
     val g = UInt(1.W)
     val p = UInt(1.W)
     val t = UInt(1.W)
+
+    def dot (that: GPT) : GPT = GPTInit(this.g | (this.p & that.g), this.p & that.p, this.t)
 }
 
 object GPTInit {
@@ -89,17 +91,10 @@ class ReduceGroup (val valency: Int) extends Module {
         val gptout = Output(Vec(valency, new GPT))
     })
 
-    val gptin0 = io.gptin(0)
-    val gptout0 = gptin0
-
-    val gptin1 = io.gptin(1)
-    val gptout1 = GPTInit(gptin1.g | (gptin0.g & gptin1.p), gptin1.p & gptin0.p, gptin1.t)
-
-    val gptin2 = io.gptin(2)
-    val gptout2 = GPTInit(gptin2.g | (gptin2.p & gptin1.g) | (gptin0.g & gptin1.p & gptin2.p), gptin2.p & gptin1.p & gptin0.p, gptin2.t)
-
-    val gptin3 = io.gptin(3)
-    val gptout3 = GPTInit(gptin3.g | (gptin3.p & gptin2.g) | (gptin3.p & gptin2.p & gptin1.g) | (gptin0.g & gptin1.p & gptin2.p & gptin3.p), gptin3.p & gptin2.p & gptin1.p & gptin0.p, gptin3.t)
+    val gptout0 = io.gptin(0)
+    val gptout1 = io.gptin(1) dot io.gptin(0)
+    val gptout2 = io.gptin(2) dot io.gptin(1) dot io.gptin(0)
+    val gptout3 = io.gptin(3) dot io.gptin(2) dot io.gptin(1) dot io.gptin(0)
 
     io.gptout := VecInit(gptout0, gptout1, gptout2, gptout3)
 }
