@@ -29,19 +29,19 @@ class FMul extends Module {
     val shiftreg = Delay(shift.io.out, 3) // 8
     val leadingzreg2 = RegNext(leadingzreg) // 6
 
-    val adder = Module(new FastAdderPipelined(12))
+    val adder = Module(new FastAdderPipelined(12, 4))
     adder.io.a := io.a.exp
     adder.io.b := io.b.exp
     adder.io.cin := 0.U
     val addreg = RegNext(adder.io.Sum) // 3
 
-    val subtractor1 = Module(new FastSubtractorPipelined(12))
+    val subtractor1 = Module(new FastSubtractorPipelined(12, 4))
     subtractor1.io.a := addreg
     subtractor1.io.b := 126.U
     subtractor1.io.cin := 0.U
     val subreg = RegNext(subtractor1.io.Diff) // 6
 
-    val subtractor2 = Module(new FastSubtractorPipelined(12))
+    val subtractor2 = Module(new FastSubtractorPipelined(12, 4))
     subtractor2.io.a := subreg
     subtractor2.io.b := leadingzreg2
     subtractor2.io.cin := 0.U

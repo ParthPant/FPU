@@ -24,12 +24,12 @@ class FAddSub extends Module {
 
     val sz = (x.sign ^ y.sign).asBool //2
 
-    val adder = Module(new FastAdderPipelined(24))
+    val adder = Module(new FastAdderPipelined(24, 4))
     adder.io.a := x.significand //2
     adder.io.b := y.significand //2
     adder.io.cin := 0.U //2
 
-    val subtractor = Module(new FastAdderPipelined(24))
+    val subtractor = Module(new FastAdderPipelined(24, 4))
     subtractor.io.a := x.significand //2
     subtractor.io.b := ~y.significand //2
     subtractor.io.cin := 1.U //2

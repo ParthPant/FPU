@@ -62,7 +62,7 @@ object RippleCarryAdder {
     }
 }
 
-class FastAdderPipelined(val width: Int) extends Module {
+class FastAdderPipelined(val width: Int, val valency: Int) extends Module {
     val io = IO(new Bundle {
         val a = Input(UInt(width.W))
         val b = Input(UInt(width.W))
@@ -72,19 +72,21 @@ class FastAdderPipelined(val width: Int) extends Module {
         val Cout = Output(UInt(1.W))
     })
 
-    val valency = 4
+    def gptGen(pair : (Bool, Bool)) : GPT = {
+        val (a, b) = pair
+        GPTInit(a & b, a || b, a ^ b)
+    }
 
-    val gpts_0 = GPTGen(width)(io.a, io.b)
-    val groups = gpts_0.grouped(valency).toVector.map{
-        case group => ReduceGroup(valency)(group)
+    val (as, bs) = (io.a.asBools, io.b.asBools)
+    val gpts_0 = as.zip(bs).map(gptGen(_))
+    val gpts = gpts_0.grouped(valency).toVector.map{
+        case group => group.tail.reverse.scanRight(group.head)(_ dot _).reverse
     }.flatten
 
     def reduce(gpts: Seq[GPT], cin: Bool) : (UInt, UInt) = {
         def nextLayer(prev: Seq[GPT], cin: Bool, groupoffset: Int) : (UInt, UInt) = {
             if (valency*groupoffset > prev.size) {
-                val gs = prev.map(_.g)
-                val ps = prev.map(_.p)
-                val ts = prev.map(_.t)
+                val (gs, ps, ts) = (prev.map(_.g), prev.map(_.p), prev.map(_.t))
 
                 val cs = cin +: gs.zip(ps).map{ case (gi, pi) => gi | (pi & cin) }
                 val ss = for (i <- 0 until width) yield {
@@ -110,14 +112,14 @@ class FastAdderPipelined(val width: Int) extends Module {
         nextLayer(gpts, cin, 1)
     }
     
-    val (sum, cout) = reduce(groups, io.cin.asBool)
+    val (sum, cout) = reduce(gpts, io.cin.asBool)
     io.Sum := sum
     io.Cout := cout
 }
 
 object FastAdderPipelined {
-    def apply (width: Int) (a: UInt, b: UInt, cin: UInt) : (UInt, UInt) = {
-        val mod = Module (new FastAdderPipelined(width))
+    def apply (width: Int, valency: Int) (a: UInt, b: UInt, cin: UInt) : (UInt, UInt) = {
+        val mod = Module (new FastAdderPipelined(width, valency))
         mod.io.a := a
         mod.io.b := b
         mod.io.cin := cin
