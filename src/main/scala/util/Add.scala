@@ -72,24 +72,19 @@ class FastAdderPipelined(val width: Int) extends Module {
         val Cout = Output(UInt(1.W))
     })
 
-    def getSteps : Int = {
-        val lnOf2 = scala.math.log(2) // natural log of 2
-        def log2(x: Double): Double = scala.math.log(x) / lnOf2
-        1 + log2(width/4).toInt
-    }
+    val valency = 4
 
     val gpts_0 = GPTGen(width)(io.a, io.b)
-    val groups = VecInit(gpts_0.grouped(4).toVector.map{
-        case group => ReduceNibble(VecInit(group))
-    })
+    val groups = gpts_0.grouped(valency).toVector.map{
+        case group => ReduceGroup(valency)(group)
+    }.flatten
 
-    def reduce(gpts: Vec[Vec[GPT]], cin: Bool) : (UInt, UInt) = {
-        def nextLayer(prev: Vec[Vec[GPT]], cin: Bool, offset: Int) : (UInt, UInt) = {
-            if (offset > prev.size) {
-                val gpts_last = prev.flatten
-                val gs = gpts_last.map(_.g)
-                val ps = gpts_last.map(_.p)
-                val ts = gpts_last.map(_.t)
+    def reduce(gpts: Seq[GPT], cin: Bool) : (UInt, UInt) = {
+        def nextLayer(prev: Seq[GPT], cin: Bool, groupoffset: Int) : (UInt, UInt) = {
+            if (valency*groupoffset > prev.size) {
+                val gs = prev.map(_.g)
+                val ps = prev.map(_.p)
+                val ts = prev.map(_.t)
 
                 val cs = cin +: gs.zip(ps).map{ case (gi, pi) => gi | (pi & cin) }
                 val ss = for (i <- 0 until width) yield {
@@ -98,18 +93,18 @@ class FastAdderPipelined(val width: Int) extends Module {
                 (VecInit(ss).asUInt, cs.last.asUInt)
             } else {
                 val layer = VecInit(Vector.tabulate(prev.size) { i =>
-                    if (i < offset) {
+                    if (i < valency*groupoffset) {
                         prev(i)
                     } else {
-                        val (grpi, grpj) = (prev(i), prev(i - offset))
-                        val gptj = grpj.last
-                        VecInit(grpi.map{ case gpti => GPTInit (gpti.g | (gpti.p & gptj.g), gpti.p & gptj.p, gpti.t) })
+                        // println(s"$i -> ${i - i%4 - groupoffset*4 + 4 - 1}")
+                        val (gpti, gptj) = (prev(i), prev(i - i%valency - groupoffset*valency + valency - 1))
+                        GPTInit(gpti.g | (gpti.p & gptj.g), gpti.p & gptj.p, gpti.t)
                     }
                 })
 
                 val reg = RegNext(layer)
                 val cinreg = RegNext(cin)
-                nextLayer(reg, cinreg, offset<<1)
+                nextLayer(reg, cinreg, groupoffset<<1)
             }
         }
 

@@ -83,10 +83,10 @@ object GPTGen {
     }
 }
 
-class ReduceNibble extends Module {
+class ReduceGroup (val valency: Int) extends Module {
     val io = IO(new Bundle {
-        val gptin = Input(Vec(4, new GPT))
-        val gptout = Output(Vec(4, new GPT))
+        val gptin = Input(Vec(valency, new GPT))
+        val gptout = Output(Vec(valency, new GPT))
     })
 
     val gptin0 = io.gptin(0)
@@ -104,10 +104,10 @@ class ReduceNibble extends Module {
     io.gptout := VecInit(gptout0, gptout1, gptout2, gptout3)
 }
 
-object ReduceNibble {
-    def apply(gptin: Vec[GPT]) = {
-        val mod = Module( new ReduceNibble )
-        mod.io.gptin := gptin
+object ReduceGroup {
+    def apply(valency: Int) (gptin: Seq[GPT]) : Vec[GPT] = {
+        val mod = Module( new ReduceGroup(valency) )
+        mod.io.gptin := VecInit(gptin)
         mod.io.gptout
     }
 }
