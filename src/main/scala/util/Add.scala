@@ -80,7 +80,7 @@ class FastAdderPipelined(val width: Int, val valency: Int) extends Module {
     val (as, bs) = (io.a.asBools, io.b.asBools)
     val gpts_0 = as.zip(bs).map(gptGen(_))
     val gpts = gpts_0.grouped(valency).toVector.map{
-        case group => group.tail.reverse.scanRight(group.head)(_ dot _).reverse
+        case group => group.tail.scanLeft(group.head)((a, b) => b dot a)
     }.flatten
 
     def reduce(gpts: Seq[GPT], cin: Bool) : (UInt, UInt) = {
