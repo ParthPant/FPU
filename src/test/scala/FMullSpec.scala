@@ -14,7 +14,7 @@ class FMulSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
     val r = scala.util.Random
 
     it should "Multiply two numbers" in {
-        for (i <- 0 until 50) {
+        for (i <- 0 until 10) {
             test (new FMul).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
                 val a = -1 + 2 * r.nextFloat()
                 val b = -1 + 2 * r.nextFloat()
@@ -22,7 +22,7 @@ class FMulSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
 
                 c.io.a.poke(FloatingPoint.make(a))
                 c.io.b.poke(FloatingPoint.make(b))
-                c.clock.step(8)
+                c.clock.step(4)
 
                 val res = FloatingPoint.open(c.io.out.peek())
                 val del = p - res
@@ -32,7 +32,7 @@ class FMulSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
     }
 
     val n = 20 
-    val steps = 8
+    val steps = 4
     it should s"Multiply $n pipelined numbers" in {
         test (new FMul).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
             val ips = for (i <- 1 to n) yield { 
