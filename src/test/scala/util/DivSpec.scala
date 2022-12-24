@@ -11,7 +11,7 @@ class ArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "ArrayDivider"
 
   val r = scala.util.Random
-  val n = 5
+  val n =20 
   
   for (w <- List(8, 16, 24, 32)) {
     val hi = BigInt(2).pow(w)
@@ -20,11 +20,13 @@ class ArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
     it should s"Divide $n $w-bit numbers in ${steps+1} cycles" in {
         test (new ArrayDivider(w, stages)).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
           val ips = for (i <- 1 to n) yield { 
-            val a = BigInt(w, r)
-            val b = BigInt(w, r)
-            val (zhi, d) = (a min b, a max b)
-            val zlo = BigInt(w, r)
-            val z = (zhi<<w)|zlo
+            // val a = BigInt(w, r)
+            // val b = BigInt(w, r)
+            // val (zhi, d) = (a min b, a max b)
+            // val zlo = BigInt(w, r)
+            // val z = (zhi<<w)|zlo
+            val z = BigInt(w, r)
+            val d = BigInt(w, r)
             val Q = z/d
             (z, d, Q)
           }
