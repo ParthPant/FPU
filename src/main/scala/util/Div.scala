@@ -30,7 +30,7 @@ object CAS {
   }
 }
 
-class ArrayDivider(val width: Int) extends Module {
+class ArrayDivider(val width: Int, val stages: Seq[Int]) extends Module {
   val io = IO(new Bundle {
     val z = Input(UInt((2*width).W)) //dividend
     val d = Input(UInt(width.W)) //divisor
@@ -60,9 +60,13 @@ class ArrayDivider(val width: Int) extends Module {
 
         val snext = if (z.isEmpty) ns.asUInt else Cat(ns.asUInt(width-1, 0), z.last)
         val znext = z.dropRight(1)
-        val qnext = cs.last +: q
+        val qnext = VecInit(cs.last +: q)
 
-        nextLayer(cs.last, znext, snext, d, qnext, depth+1)
+        if (stages contains depth) {
+          val regznext = if (znext.isEmpty) znext else RegNext(VecInit(znext))
+          nextLayer(RegNext(cs.last), regznext, RegNext(snext), RegNext(d), RegNext(qnext), depth+1)
+        } else
+          nextLayer(cs.last, znext, snext, d, qnext, depth+1)
       } else {
         VecInit(q).asUInt
       }

@@ -29,7 +29,7 @@ class ArrayMultiplier(val width : Int, val stages: Seq[Int]) extends Module {
                     }
                 }).asUInt
 
-                if (stages.contains(depth)) {
+                if (stages contains depth) {
                     nextLayer((RegNext(a), RegNext(nextb)), (RegNext(s), RegNext(c)), RegNext(nextres), depth+1)
                 } else {
                     nextLayer((a, nextb), (s, c), nextres, depth+1)

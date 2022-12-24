@@ -3,31 +3,48 @@ package fpu
 import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
+import chiseltest.simulator.WriteVcdAnnotation
+import scala.collection.mutable.ListBuffer
+import org.scalatest.matchers.should.Matchers._
 
 class ArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "ArrayDivider"
 
   val r = scala.util.Random
+  val n = 5
   
   for (w <- List(8, 16, 24, 32)) {
     val hi = BigInt(2).pow(w)
-    it should s"Divider $w-bit numbers" in {
-      for (i <- 1 to 10) {
-        test (new ArrayDivider(w)) { c =>
-          val a = BigInt(w, r)
-          val b = BigInt(w, r)
-          val (zhi, d) = (a min b, a max b)
-          val zlo = BigInt(w, r)
-          val z = (zhi<<w)|zlo
-          val Q = z/d
+    val stages = Seq(w/3, 2*w/3)
+    val steps = stages.size
+    it should s"Divide $n $w-bit numbers in ${steps+1} cycles" in {
+        test (new ArrayDivider(w, stages)).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
+          val ips = for (i <- 1 to n) yield { 
+            val a = BigInt(w, r)
+            val b = BigInt(w, r)
+            val (zhi, d) = (a min b, a max b)
+            val zlo = BigInt(w, r)
+            val z = (zhi<<w)|zlo
+            val Q = z/d
+            (z, d, Q)
+          }
 
-          c.io.z.poke(z.U)
-          c.io.d.poke(d.U)
+          val outBuffer = new ListBuffer[BigInt]()
+          for (ip <- ips) {
+              c.io.z.poke(ip._1.U)
+              c.io.d.poke(ip._2.U)
+              val o = c.io.Q.peek().litValue
+              outBuffer += o
+              c.clock.step(1)
+          }
 
-          val out = c.io.Q.peekInt()
-          // println(s"${Q == ${out.toString(2)}")
-          c.io.Q.expect(Q.U)
-        }
+          for (i <- 1 to steps) {
+              val o = c.io.Q.peek().litValue
+              outBuffer += o
+              c.clock.step(1)
+          }
+          val outList = outBuffer.toList.drop(outBuffer.size - n)
+          ips.zip(outList).map{ case (ip, op) => ip._3 shouldBe op }
       }
     }
   }
