@@ -35,10 +35,11 @@ class ArrayDivider(val width: Int, val stages: Seq[Int]) extends Module {
     val z = Input(UInt((2*width).W)) //dividend
     val d = Input(UInt(width.W)) //divisor
 
-    val Q = Output(UInt((width+1).W))
+    val Q = Output(UInt(width.W))
+    val S = Output(UInt(width.W))
   })
 
-  def makeTree(z: UInt, d: UInt) : UInt = {
+  def makeTree(z: UInt, d: UInt) : (UInt, UInt) = {
     /* nextLayer
      * 
      * @param ctrl -> add/sub control and cin from prev layer
@@ -47,8 +48,8 @@ class ArrayDivider(val width: Int, val stages: Seq[Int]) extends Module {
      * @param d    -> divisor
      * @param q    -> quotient (each layer produces a new bit)
      */
-    def nextLayer(ctrl: Bool, z: Seq[Bool], s: UInt, d: UInt, q: Seq[Bool], depth: Int) : UInt = {
-      if (depth <= width) {
+    def nextLayer(ctrl: Bool, z: Seq[Bool], s: UInt, d: UInt, q: Seq[Bool], depth: Int) : (UInt, UInt) = {
+      if (depth < width) {
         val cs = Wire(Vec(width+1, Bool()))
         val ns = Wire(Vec(width+1, Bool()))
 
@@ -68,16 +69,18 @@ class ArrayDivider(val width: Int, val stages: Seq[Int]) extends Module {
         } else
           nextLayer(cs.last, znext, snext, d, qnext, depth+1)
       } else {
-        VecInit(q).asUInt
+        (VecInit(q).asUInt, s)
       }
     }
 
-    val s0 = Cat(0.U, VecInit(z.asBools.drop(width)).asUInt)
+    val s0 = z(2*width-1, width-1)
     val d0 = Cat(0.U, d.asUInt)
-    val z0 = z.asBools.dropRight(width)
+    val z0 = z.asBools.dropRight(width+1)
 
     nextLayer(1.B, z0, s0, d0, Seq(), 0)
   }
 
-  io.Q := makeTree(io.z, io.d)
+  val (q, s) = makeTree(io.z, io.d)
+  io.Q := q
+  io.S := s
 }
