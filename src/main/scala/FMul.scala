@@ -11,27 +11,21 @@ class FMul extends Module {
         val out = Output(new FloatingPoint)
     }) 
 
-    val signout = Delay(io.a.sign ^ io.b.sign, 4)
+    val signout = Delay(io.a.sign ^ io.b.sign, 2)
 
-    val multiplier = Module(new ArrayMultiplier(24, List(6, 12, 18)))
+    val multiplier = Module(new ArrayMultiplier(24, List(8, 16)))
     multiplier.io.a := io.a.significand
     multiplier.io.b := io.b.significand
-    val multout = RegNext(multiplier.io.P)
+    val multout = multiplier.io.P
 
-    val adder = Module(new FastAdderPipelined(10, 5))
+    val adder = Module(new FastAdderPipelined(8, 4))
     adder.io.a := io.a.exp
     adder.io.b := io.b.exp
-    adder.io.cin := 0.U
-    val addout = adder.io.Sum
-
-    val subtractor = Module(new FastSubtractorPipelined(10, 5))
-    subtractor.io.a := addout
-    subtractor.io.b := 127.U
-    subtractor.io.cin := 0.U
-    val subout = subtractor.io.Diff
+    adder.io.cin := 1.U
+    val addout = VecInit.tabulate(8)(i => if (i==7) ~adder.io.Sum(i) else adder.io.Sum(i)).asUInt
 
     val sigout = Mux(multout(47), multout(47,24), multout(46, 23))
-    val expout = Mux(multout(47), subout + 1.U, subout)
+    val expout = Mux(multout(47), addout + 1.U, addout)
 
     io.out.exp := expout
     io.out.significand := sigout
