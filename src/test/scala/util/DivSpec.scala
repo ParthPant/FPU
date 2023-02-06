@@ -17,7 +17,7 @@ class NonRestoringArrayDividerSpec
 
   val w = 24
   val stages = Seq(w / 3, 2 * w / 3)
-  it should "Divide two 4-bit numbers" in {
+  it should s"Divide two $w-bit numbers" in {
     for (ops <- 1 until 10) {
       test(new NonRestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
@@ -31,9 +31,9 @@ class NonRestoringArrayDividerSpec
 
           c.clock.step(3)
 
-          println(s"$z/$d = $Q =/= ${c.io.Q.peek().litValue}")
+          // println(s"$z/$d = $Q =/= ${c.io.Q.peek().litValue}")
 
-          // c.io.Q.expect(Q.U)
+          c.io.Q.expect(Q.U)
         }
     }
   }

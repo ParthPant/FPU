@@ -3,6 +3,60 @@ package fpu
 import chisel3._
 import chisel3.experimental.BundleLiterals._
 
+class CAS extends Module {
+  val io = IO(new Bundle {
+    val a = Input(Bool())
+    val b = Input(Bool())
+    val ctrl = Input(Bool())
+    val cin = Input(Bool())
+
+    val S = Output(Bool())
+    val Cout = Output(Bool())
+  })
+
+  val (s, cout) = FA(io.a ^ io.ctrl, io.b, io.cin)
+  io.S := s
+  io.Cout := cout
+}
+
+object CAS {
+  def apply(a: Bool, b: Bool, ctrl: Bool, cin: Bool): (Bool, Bool) = {
+    val mod = Module(new CAS)
+    mod.io.a := a
+    mod.io.b := b
+    mod.io.ctrl := ctrl
+    mod.io.cin := cin
+    (mod.io.S, mod.io.Cout)
+  }
+}
+
+class CSub extends Module {
+  val io = IO(new Bundle {
+    val a = Input(Bool())
+    val b = Input(Bool())
+    val ctrl = Input(Bool())
+    val cin = Input(Bool())
+
+    val S = Output(Bool())
+    val Cout = Output(Bool())
+  })
+
+  val (d, bout) = FS(io.a, io.b, io.cin)
+  io.S := Mux(io.ctrl, d, io.a)
+  io.Cout := bout
+}
+
+object CSub {
+  def apply(a: Bool, b: Bool, ctrl: Bool, cin: Bool): (Bool, Bool) = {
+    val mod = Module(new CSub)
+    mod.io.a := a
+    mod.io.b := b
+    mod.io.ctrl := ctrl
+    mod.io.cin := cin
+    (mod.io.S, mod.io.Cout)
+  }
+}
+
 class GPT extends Bundle {
   val g = UInt(1.W)
   val p = UInt(1.W)
