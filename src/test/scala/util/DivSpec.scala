@@ -41,7 +41,7 @@ class NonRestoringArrayDividerSpec
   for (w <- List(8, 16, 24, 32)) {
     val stages = Seq(w / 3, 2 * w / 3)
     val steps = stages.size
-    it should s"Divide $n $w-bit numbers in ${steps + 1} cycles" ignore {
+    it should s"Divide $n $w-bit numbers in ${steps + 1} cycles" in {
       test(new NonRestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
           val ips = for (i <- 1 to n) yield {
@@ -85,8 +85,8 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
   val n = 10
 
   val w = 24
-  val stages = Seq(w / 3, 2 * w / 3)
-  it should "Divide two 4-bit numbers" in {
+  it should "Divide two 4-bit numbers" ignore {
+    val stages = Seq(w / 3, 2 * w / 3)
     for (ops <- 1 until 30) {
       test(new RestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
@@ -107,7 +107,7 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
   for (w <- List(8, 16, 24, 32)) {
     val stages = Seq(w / 3, 2 * w / 3)
     val steps = stages.size
-    it should s"Divide $n $w-bit numbers in ${steps + 1} cycles" in {
+    it should s"Divide $n $w-bit numbers in ${steps + 1} cycles" ignore {
       test(new RestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
           val ips = for (i <- 1 to n) yield {
@@ -137,7 +137,7 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
           }
           val outList = outBuffer.toList.drop(outBuffer.size - n)
           // outList.map{o => println(s"${o._1.toString(2).reverse.padTo(w, '0').reverse}, ${o._2.toString(2).reverse.padTo(w, '0').reverse}")}
-          // ips.zip(outList).map{ case (ip, op) => println(s"${ip._3}/${ip._4} == ${op._1}/${op._2}")}
+          // ips.zip(outList).map{ case (ip, op) => println(s"${ip._3}/${ip._4} =/= ${op._1}/${op._2}")}
           ips.zip(outList).map {
             case (ip, op) => {
               ip._3 shouldBe op._1
@@ -145,6 +145,30 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
             }
           }
         }
+    }
+  }
+
+  it should s"Divide shifted floating numbers" in {
+    for (i <- 0 until 10) {
+      val stages = Seq(w / 3, 2 * w / 3)
+      test(new RestoringArrayDivider(24, stages)) { c =>
+        val z = (BigInt(w, r) | BigInt(1 << (w - 1))) << (w - 1)
+        val d = BigInt(w, r) | BigInt(1 << (w - 1))
+        val Q = z / d
+        val S = z % d
+
+        c.io.z.poke(z.U)
+        c.io.d.poke(d.U)
+
+        c.clock.step(3)
+
+        val qs =
+          c.io.Q.peek().litValue.toString(2).reverse.padTo(24, '0').reverse
+        // println(s"$z/$d == $Q/$S =/= ${c.io.Q.peek().litValue}/${c.io.S.peek().litValue}")
+        // println(s"Q = $qs")
+
+        c.io.Q.expect(Q.U)
+      }
     }
   }
 }

@@ -11,27 +11,25 @@ class FDiv extends Module {
     val out = Output(new FloatingPoint)
   })
 
-  val signout = Delay(io.a.sign ^ io.b.sign, 4)
+  val signout = Delay(io.a.sign ^ io.b.sign, 2)
 
-  val divider = Module(new NonRestoringArrayDivider(24, List()))
-  divider.io.z := io.a.significand
+  val divider = Module(new RestoringArrayDivider(24, List(8, 16)))
+  divider.io.z := io.a.significand << 23
   divider.io.d := io.b.significand
-  val divout = RegNext(divider.io.Q)
+  val divout = divider.io.Q
 
-  val subtractor = Module(new FastSubtractorPipelined(10, 5))
+  val subtractor = Module(new FastAdderPipelined(8, 4))
   subtractor.io.a := io.a.exp
-  subtractor.io.b := io.b.exp
+  subtractor.io.b := ~io.b.exp
   subtractor.io.cin := 0.U
-  val subout = subtractor.io.Diff
+  val subout = VecInit
+    .tabulate(8)(i =>
+      if (i == 7) ~subtractor.io.Sum(i) else subtractor.io.Sum(i)
+    )
+    .asUInt
 
-  val adder = Module(new FastAdderPipelined(10, 5))
-  adder.io.a := subout
-  adder.io.b := 127.U
-  adder.io.cin := 0.U
-  val addout = adder.io.Sum
-
-  val sigout = Mux(divout(24), divout, divout)
-  val expout = Mux(divout(24), addout + 1.U, addout)
+  val sigout = Mux(divout(23), divout, divout << 1)
+  val expout = Mux(divout(23), subout, subout - 1.U)
 
   io.out.exp := expout
   io.out.significand := sigout

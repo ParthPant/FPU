@@ -13,6 +13,7 @@ class FDivSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
 
   val r = scala.util.Random
 
+  val steps = 2
   it should "Divide two numbers" in {
     for (i <- 0 until 10) {
       test(new FDiv).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
@@ -22,18 +23,19 @@ class FDivSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
 
         c.io.a.poke(FloatingPoint.make(a))
         c.io.b.poke(FloatingPoint.make(b))
-        c.clock.step(4)
+        c.clock.step(steps)
 
         val res = FloatingPoint.open(c.io.out.peek())
         val del = q - res
-        // assert(del.abs < 0.00001)
+
+        // println(s"$q =/= ${res} ..... ${res/q}")
+        assert(del.abs < 0.00001)
       }
     }
   }
 
   val n = 20
-  val steps = 4
-  it should s"Divide $n pipelined numbers" ignore {
+  it should s"Divide $n pipelined numbers" in {
     test(new FDiv).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
       val ips = for (i <- 1 to n) yield {
         val a = -1 + 2 * r.nextFloat()
