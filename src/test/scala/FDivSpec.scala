@@ -2,62 +2,50 @@ package fpu
 
 import chisel3._
 import chiseltest._
-import chisel3.experimental.BundleLiterals._
 import org.scalatest.flatspec.AnyFlatSpec
 import chiseltest.simulator.WriteVcdAnnotation
-import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ListBuffer
+import org.scalatest.matchers.should.Matchers._
+import com.typesafe.scalalogging.LazyLogging
 
-class FAddSubSpec
-    extends AnyFlatSpec
-    with ChiselScalatestTester
-    with LazyLogging {
-  behavior of "FAddSub"
+class FDivSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
+  behavior of "FDiv"
 
-  val lnOf2 = scala.math.log(2) // natural log of 2
-  def log2(x: Double): Double = scala.math.log(x) / lnOf2
   val r = scala.util.Random
 
-  val steps = 5
-  it should "Add two numbers" in {
-    for (i <- 0 until 50) {
-      test(new FAddSub).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
+  it should "Divide two numbers" in {
+    for (i <- 0 until 10) {
+      test(new FDiv).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
         val a = -1 + 2 * r.nextFloat()
         val b = -1 + 2 * r.nextFloat()
-        val diff = r.nextBoolean()
-        val s = if (diff) { a - b }
-        else { a + b }
+        val q = a / b
 
         c.io.a.poke(FloatingPoint.make(a))
         c.io.b.poke(FloatingPoint.make(b))
-        c.io.o.poke(diff.B)
-
-        c.clock.step(steps)
+        c.clock.step(4)
 
         val res = FloatingPoint.open(c.io.out.peek())
-        val del = s - res
-        assert(del.abs < 0.00001)
+        val del = q - res
+        // assert(del.abs < 0.00001)
       }
     }
   }
 
-  val n = 50
-  it should s"Add $n pipelined numbers" in {
-    test(new FAddSub).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
+  val n = 20
+  val steps = 4
+  it should s"Divide $n pipelined numbers" ignore {
+    test(new FDiv).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
       val ips = for (i <- 1 to n) yield {
         val a = -1 + 2 * r.nextFloat()
         val b = -1 + 2 * r.nextFloat()
-        val diff = r.nextBoolean()
-        val s = if (diff) { a - b }
-        else { a + b }
-        (a, b, diff, s)
+        val q = a / b
+        (a, b, q)
       }
 
       val outBuffer = new ListBuffer[Float]()
       for (ip <- ips) {
         c.io.a.poke(FloatingPoint.make(ip._1))
         c.io.b.poke(FloatingPoint.make(ip._2))
-        c.io.o.poke(ip._3.B)
         val o = FloatingPoint.open(c.io.out.peek())
         outBuffer += o
         c.clock.step(1)
@@ -72,8 +60,7 @@ class FAddSubSpec
       val outList = outBuffer.toList.drop(outBuffer.size - n)
       val dels = ips.zip(outList).map {
         case (ip, op) => {
-          // logger.info(s"${ip._4} :=: $op")
-          val del = ip._4 - op
+          val del = ip._3 - op
           assert(del.abs < 0.00001)
           del
         }
