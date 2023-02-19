@@ -1,7 +1,6 @@
 package fpu
 
 import chisel3._
-import util._
 
 class FDiv extends Module {
   val io = IO(new Bundle {

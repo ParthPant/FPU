@@ -39,7 +39,8 @@ class SqRooterSpec extends AnyFlatSpec with ChiselScalatestTester {
           c.clock.step(steps)
 
           val res = c.io.Q.peek().litValue
-          // println(s"$z ==> $R =/= $res")
+          // val ress = res.toString(2).reverse.padTo(8, '0').reverse
+          // println(s"$z ==> $R =/= $ress")
           val del = R - BigDecimal(res)
           assert(del.abs < 1)
       }
