@@ -9,23 +9,33 @@ class FRoot extends Module {
     val out = Output(new FloatingPoint)
   })
 
-  val subtractor = Module(new FastSubtractorPipelined(8, 4))
-  subtractor.io.a := io.a.exp
-  subtractor.io.b := 127.U
-  subtractor.io.cin := 0.U
-  val subout = Mux(subtractor.io.Cout.asBool, ~subtractor.io.Diff + 1.U, subtractor.io.Diff)
+  val even = io.a.exp(0)
+  val neg = ~io.a.exp(7)
 
+  val diff = VecInit
+    .tabulate(8)(i => if (i == 7) ~io.a.exp(i) else io.a.exp(i))
+    .asUInt
+  val subout = Delay(Mux(neg, ~diff, diff - 1.U), 1)
+
+  val rootin = Mux(even, io.a.significand >> 1, io.a.significand)
   val rooter = Module(new SqRooter(24, Seq(6)))
-  rooter.io.z := Mux(io.a.exp(0), io.a.significand, io.a.significand >> 2)
+  rooter.io.z := rootin
   val rootout = rooter.io.Q
 
-  val exp = Mux(subout(0), (subout + 1.U) >> 1.U, (subout >> 1.U) + 1.U)
-  val off = Mux(rootout(11), (127-1).U, (127-2).U)
-  val expout = Mux(subtractor.io.Cout.asBool, off - exp, off + exp)
+  val expout = Wire(UInt(8.W))
+  when(Delay(neg, 1)) {
+    val exp = Mux(subout(0), subout - 1.U, subout) >> 1.U
+    expout := VecInit
+      .tabulate(8)(i => if (i == 7) exp(i) else ~exp(i))
+      .asUInt
+  }.otherwise {
+    val exp = Mux(subout(0), subout + 1.U, subout) >> 1.U
+    expout := VecInit
+      .tabulate(8)(i => if (i == 7) ~exp(i) else exp(i))
+      .asUInt
+  }
 
-  val sigout = Mux(rootout(11), Cat(rootout, 0.U(12.W)), Cat(rootout(10, 0), 0.U(13.W))) 
-
-  io.out.sign := io.a.sign
-  io.out.exp := expout
-  io.out.significand := sigout
+  io.out.exp := Mux(Delay(even, 1), expout, expout - 1.U)
+  io.out.sign := Delay(io.a.sign, 1)
+  io.out.significand := Cat(rootout, 0.U(12.W))
 }

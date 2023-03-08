@@ -8,7 +8,7 @@ class SqRooter(val width: Int, val stages: Seq[Int]) extends Module {
   val io = IO(new Bundle {
     val z = Input(UInt(width.W)) // Radicand
 
-    val Q = Output(UInt((width/2).W)) // Root
+    val Q = Output(UInt((width / 2).W)) // Root
     val S = Output(UInt(width.W)) // Remainder
   })
 
