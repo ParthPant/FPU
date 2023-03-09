@@ -12,71 +12,64 @@ class FAddSub extends Module {
     val out = Output(new FloatingPoint)
   })
 
-  val a = io.a
-  val b = FloatingPoint(io.o ^ io.b.sign, io.b.significand, io.b.exp)
-  val agtb = io.a.exp >= io.b.exp
+  val op = io.a.sign.asBool ^ (io.b.sign.asBool ^ io.o)
 
-  val _x = Mux(agtb, a, b) // 1
-  val _y = Mux(agtb, b, a) // 1
+  val expsub = Module(new FastAdderPipelined(8, 4))
+  expsub.io.a := io.a.exp;
+  expsub.io.b := ~io.b.exp;
+  expsub.io.cin := 1.U;
+  val exp_diff = Mux(expsub.io.Cout.asBool, expsub.io.Sum, ~expsub.io.Sum + 1.U)
+  val diff_gt = exp_diff > 24.U
 
-  val y = RegNext(
-    FloatingPoint(
-      _y.sign,
-      ShiftRight(24)(_y.significand, _x.exp - _y.exp),
-      _x.exp
+  val op1 = Wire(UInt(48.W))
+  val op2 = Wire(UInt(48.W))
+  val exp = Wire(UInt(8.W))
+
+  when(~diff_gt) {
+    op1 := io.a.significand
+    op2 := Mux(
+      expsub.io.Cout.asBool,
+      ShiftRight(48)(io.b.significand, exp_diff), // +ve
+      ShiftLeft(48)(io.b.significand, exp_diff)   // -ve
     )
-  ) // 2
-  val x = RegNext(_x) // 2
-
-  val sz = (x.sign ^ y.sign).asBool // 2
-
-  val adder = Module(new FastAdderPipelined(24, 4))
-  adder.io.a := x.significand // 2
-  adder.io.b := y.significand // 2
-  adder.io.cin := 0.U // 2
-
-  val subtractor = Module(new FastAdderPipelined(24, 4))
-  subtractor.io.a := x.significand // 2
-  subtractor.io.b := ~y.significand // 2
-  subtractor.io.cin := 1.U // 2
-
-  val szreg = Delay(sz, 3) // 5
-  val xsign = Delay(x.sign, 3) // 5
-  val ysign = Delay(y.sign, 3) // 5
-
-  val sum = Mux(szreg, subtractor.io.Sum, adder.io.Sum) // 5
-  val cout = Mux(szreg, subtractor.io.Cout, adder.io.Cout) // 5
-  val diff = Mux(cout.asBool, sum, ~sum + 1.U) // 5
-  val signout = Mux(szreg, xsign ^ ~cout.asBool, xsign) // 5
-
-  val xexp = Delay(x.exp, 4) // 6
-  val signoutreg = RegNext(signout) // 6
-  val sumreg = RegNext(sum) // 6
-  val coutreg = RegNext(cout.asBool) // 6
-
-  when(RegNext(~szreg)) {
-    when(coutreg) {
-      io.out.significand := Cat(1.U, sumreg(23, 1)) // 6
-      io.out.exp := xexp + 1.U // 6
-    }.otherwise {
-      io.out.significand := sumreg // 6
-      io.out.exp := xexp // 6
-    }
+    exp := Mux(expsub.io.Cout.asBool, io.a.exp, io.b.exp)
   }.otherwise {
-    val clz = Module(new CLZ24)
-    clz.io.in := diff // 5
-
-    val clzreg = RegNext(clz.io.Z) // 6
-    val diffreg = RegNext(diff) // 6
-    val expout = xexp - clzreg // 6
-
-    val shifter = Module(new ShiftLeft(24))
-    shifter.io.a := diffreg // 6
-    shifter.io.shift := clzreg // 6
-
-    io.out.significand := shifter.io.out // 6
-    io.out.exp := expout // 6
+    //                                +ve               -ve
+    op1 := Mux(expsub.io.Cout.asBool, io.a.significand, 0.U)
+    op2 := Mux(expsub.io.Cout.asBool, 0.U, io.b.significand)
+    exp := Mux(expsub.io.Cout.asBool, io.a.exp, io.b.exp)
   }
 
-  io.out.sign := signoutreg // 6
+  val adder = Module(new FastAdderPipelined(48, 6))
+  adder.io.a := op1
+  adder.io.b := op2
+  adder.io.cin := 0.U;
+
+  val subtractor = Module(new FastAdderPipelined(48, 6))
+  subtractor.io.a := op1
+  subtractor.io.b := ~op2
+  subtractor.io.cin := 1.U;
+  val subout =
+    Mux(subtractor.io.Cout.asBool, subtractor.io.Sum, ~subtractor.io.Sum + 1.U)
+
+  val sumout = Mux(op, subout, adder.io.Sum)
+  val cout = Mux(op, subtractor.io.Cout, adder.io.Cout)
+
+  val clz = Module(new CLZ48())
+  clz.io.in := sumout
+  val lzs = clz.io.Z
+
+  val sum = ShiftLeft(48)(sumout, lzs)(47, 25)
+  val expout = Wire(UInt(8.W))
+  when(~diff_gt) {
+    val off = Mux(expsub.io.Cout.asBool, lzs - 24.U, 24.U - lzs)
+    expout := exp + off
+  }.otherwise {
+    expout := exp
+  }
+  val signout = io.a.sign
+
+  io.out.sign := signout
+  io.out.exp := expout
+  io.out.significand := sum
 }
