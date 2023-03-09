@@ -85,7 +85,7 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
   val n = 10
 
   val w = 24
-  it should "Divide two 4-bit numbers" ignore {
+  it should "Divide two 4-bit numbers" in {
     val stages = Seq(w / 3, 2 * w / 3)
     for (ops <- 1 until 30) {
       test(new RestoringArrayDivider(w, stages))
@@ -107,7 +107,7 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
   for (w <- List(8, 16, 24, 32)) {
     val stages = Seq(w / 3, 2 * w / 3)
     val steps = stages.size
-    it should s"Divide $n $w-bit numbers in ${steps + 1} cycles" ignore {
+    it should s"Divide $n $w-bit numbers in ${steps + 1} cycles" in {
       test(new RestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
           val ips = for (i <- 1 to n) yield {
