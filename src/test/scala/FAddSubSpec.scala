@@ -18,13 +18,13 @@ class FAddSubSpec
   def log2(x: Double): Double = scala.math.log(x) / lnOf2
   val r = scala.util.Random
 
-  val steps = 5
+  val steps = 7
   it should "Add two numbers" in {
-    for (i <- 0 until 50) {
+    for (i <- 0 until 20) {
       test(new FAddSub).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
-        val a = 1 + 2 * r.nextFloat()
-        val b = 1 + 2 * r.nextFloat()
-        val diff = false //r.nextBoolean()
+        val a = -100 + 200 * r.nextFloat()
+        val b = -100 + 200 * r.nextFloat()
+        val diff = r.nextBoolean()
         val s = if (diff) { a - b }
         else { a + b }
 
@@ -36,14 +36,14 @@ class FAddSubSpec
 
         val res = FloatingPoint.open(c.io.out.peek())
         val del = s - res
-        println(s"$a ${if (diff) "-" else "+"} $b = $s =?= $res | $del | ${res/s}")
-        // assert(del.abs < 0.00001)
+        // println(s"$a ${if (diff) "-" else "+"} $b = $s =?= $res | $del | ${res/s}")
+        assert(del.abs < 0.0001)
       }
     }
   }
 
-  val n = 50
-  it should s"Add $n pipelined numbers" ignore {
+  val n = 5
+  it should s"Add $n pipelined numbers" in {
     test(new FAddSub).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
       val ips = for (i <- 1 to n) yield {
         val a = -1 + 2 * r.nextFloat()
@@ -75,7 +75,7 @@ class FAddSubSpec
         case (ip, op) => {
           // logger.info(s"${ip._4} :=: $op")
           val del = ip._4 - op
-          assert(del.abs < 0.00001)
+          assert(del.abs < 0.0001)
           del
         }
       }

@@ -1,13 +1,21 @@
 package fpu
 
 object Main extends App {
-  // (new chisel3.stage.ChiselStage).emitVerilog(new FastAdderPipelined(32, 1), Array("--target-dir", "verilog/", "-o", "PFA_1"))
-  (new chisel3.stage.ChiselStage).emitVerilog(
-    new FastAdderPipelined(32, 2),
-    Array("--target-dir", "verilog/", "-o", "PFA_2")
-  )
-  // (new chisel3.stage.ChiselStage).emitVerilog(new FastAdderPipelined(32, 4), Array("--target-dir", "verilog/", "-o", "PFA_4"))
-  // (new chisel3.stage.ChiselStage).emitVerilog(new FastAdderPipelined(32, 8), Array("--target-dir", "verilog/", "-o", "PFA_8"))
-  // (new chisel3.stage.ChiselStage).emitVerilog(new FastAdderPipelined(32, 16), Array("--target-dir", "verilog/", "-o", "PFA_16"))
-  // (new chisel3.stage.ChiselStage).emitVerilog(new FastAdderPipelined(32, 32), Array("--target-dir", "verilog/", "-o", "PFA_32"))
+  val stage = new chisel3.stage.ChiselStage
+  // stage.emitVerilog(
+  //   new FRoot,
+  //   Array("--target-dir", "verilog/", "-o", "FRoot")
+  // )
+  // stage.emitVerilog(
+  //   new FMul,
+  //   Array("--target-dir", "verilog/", "-o", "FMul")
+  // )
+  // stage.emitVerilog(
+  //   new FDiv,
+  //   Array("--target-dir", "verilog/", "-o", "FDiv")
+  // )
+  // stage.emitVerilog(
+  //   new FAddSub,
+  //   Array("--target-dir", "verilog/", "-o", "FAddSub")
+  // )
 }
