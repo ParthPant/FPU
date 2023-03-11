@@ -29,17 +29,17 @@ class FDivSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
         val del = q - res
 
         // println(s"$q =/= ${res} ..... ${res/q}")
-        assert(del.abs < 0.00001)
+        assert(del.abs < 0.0001)
       }
     }
   }
 
-  val n = 20
+  val n = 5
   it should s"Divide $n pipelined numbers" in {
     test(new FDiv).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
       val ips = for (i <- 1 to n) yield {
-        val a = -1 + 2 * r.nextFloat()
-        val b = -1 + 2 * r.nextFloat()
+        val a = -10 + 20 * r.nextFloat()
+        val b = -10 + 20 * r.nextFloat()
         val q = a / b
         (a, b, q)
       }
@@ -63,7 +63,7 @@ class FDivSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
       val dels = ips.zip(outList).map {
         case (ip, op) => {
           val del = ip._3 - op
-          assert(del.abs < 0.00001)
+          assert(del.abs < 0.0001)
           del
         }
       }

@@ -83,6 +83,19 @@ class FRootSpec
           del
         }
       }
+
+      val av = dels.sum / dels.size
+      val max = dels.max
+      val min = dels.min
+      val stddiv = scala.math.pow(
+        (dels.map(x => (x - av) * (x - av)).sum / dels.size),
+        0.5
+      )
+
+      logger.info(s"average error : ${dels.sum / dels.size}")
+      logger.info(s"max error     : ${dels.max}")
+      logger.info(s"min error     : ${dels.min}")
+      logger.info(s"std div       : ${stddiv}")
     }
   }
 }
