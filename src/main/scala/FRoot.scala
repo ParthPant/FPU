@@ -18,7 +18,7 @@ class FRoot extends Module {
   val subout = Delay(Mux(neg, ~diff, diff - 1.U), 1)
 
   val rootin = Mux(even, io.a.significand >> 1, io.a.significand)
-  val rooter = Module(new SqRooter(24, Seq(6)))
+  val rooter = Module(new SqRooter(24, Seq(), true))
   rooter.io.z := rootin
   val rootout = rooter.io.Q
 
@@ -35,7 +35,8 @@ class FRoot extends Module {
       .asUInt
   }
 
-  io.out.exp := Mux(Delay(even, 1), expout, expout - 1.U)
-  io.out.sign := Delay(io.a.sign, 1)
+  val expres = Delay(expout, 12)
+  io.out.exp := Mux(Delay(even, 13), expres, expres - 1.U)
+  io.out.sign := 0.U
   io.out.significand := Cat(rootout, 0.U(12.W))
 }

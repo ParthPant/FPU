@@ -13,7 +13,7 @@ class FDivSpec extends AnyFlatSpec with ChiselScalatestTester with LazyLogging {
 
   val r = scala.util.Random
 
-  val steps = 2
+  val steps = 25
   it should "Divide two numbers" in {
     for (i <- 0 until 10) {
       test(new FDiv).withAnnotations(Seq(WriteVcdAnnotation)) { c =>

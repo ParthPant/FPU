@@ -3,7 +3,7 @@ package fpu
 import chisel3._
 import chisel3.util._
 
-class SqRooter(val width: Int, val stages: Seq[Int]) extends Module {
+class SqRooter(val width: Int, val stages: Seq[Int], val all: Boolean = false) extends Module {
   assert(width % 2 == 0)
   val io = IO(new Bundle {
     val z = Input(UInt(width.W)) // Radicand
@@ -40,7 +40,7 @@ class SqRooter(val width: Int, val stages: Seq[Int]) extends Module {
         val dnext = VecInit(z.takeRight(2) ++ ns)
         val snext = VecInit(1.B +: ~ctrlnext +: ctrlnext +: s.drop(2) :+ 0.B)
 
-        if (stages contains depth) {
+        if ((stages contains depth) || all) {
           val znextreg = if (znext.isEmpty) znext else RegNext(VecInit(znext))
           nextLayer(
             RegNext(snext),
@@ -54,7 +54,7 @@ class SqRooter(val width: Int, val stages: Seq[Int]) extends Module {
           nextLayer(snext, dnext, znext, ctrlnext, qnext, depth + 1)
         }
       } else {
-        (VecInit(q).asUInt, VecInit(d).asUInt)
+        (RegNext(VecInit(q).asUInt), RegNext(VecInit(d).asUInt))
       }
     }
 

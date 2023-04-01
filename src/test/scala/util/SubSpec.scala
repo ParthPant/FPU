@@ -30,7 +30,7 @@ class FastSubtractorPipelinedSpec
             val cout = if (d < 0) 1 else 0
             val diff = if (d < 0) { hi - d.abs }
             else { d }
-            val steps = 1 + log2(w / 4).toInt
+            val steps = 2 + log2(w / 4).toInt
 
             c.io.a.poke(a.U)
             c.io.b.poke(b.U)
@@ -51,7 +51,7 @@ class FastSubtractorPipelinedSpec
       val hi = BigInt(2).pow(w)
       test(new FastSubtractorPipelined(w, 4))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
-          val steps = 1 + log2(w / 4).toInt
+          val steps = 2 + log2(w / 4).toInt
 
           val ips = for (i <- 1 to n) yield {
             val a = BigInt(w, r)

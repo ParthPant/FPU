@@ -29,7 +29,7 @@ class SqRooterSpec extends AnyFlatSpec with ChiselScalatestTester {
   it should s"Calculate Square Root of a $w-bit number" in {
     for (ops <- 1 until n) {
       val stages = Seq(1)
-      val steps = stages.size
+      val steps = stages.size + 1
       test(new SqRooter(w, stages)).withAnnotations(Seq(WriteVcdAnnotation)) {
         c =>
           val z = BigInt(w, r)
@@ -50,7 +50,7 @@ class SqRooterSpec extends AnyFlatSpec with ChiselScalatestTester {
   for (w <- Seq(8, 16, 24, 32)) {
     it should s"Calculate Square Root of $n $w-bit pipelined numbers" in {
       val stages = Seq(w / 6, w / 3)
-      val steps = stages.size
+      val steps = stages.size + 1
       test(new SqRooter(w, stages)).withAnnotations(Seq(WriteVcdAnnotation)) {
         c =>
           val ips = for (i <- 1 to n) yield {

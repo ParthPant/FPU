@@ -3,7 +3,7 @@ package fpu
 import chisel3._
 import chisel3.util._
 
-class NonRestoringArrayDivider(val width: Int, val stages: Seq[Int])
+class NonRestoringArrayDivider(val width: Int, val stages: Seq[Int], val all: Boolean = false)
     extends Module {
   val io = IO(new Bundle {
     val z = Input(UInt((2 * width).W)) // dividend
@@ -45,7 +45,7 @@ class NonRestoringArrayDivider(val width: Int, val stages: Seq[Int])
         val znext = z.dropRight(1)
         val qnext = VecInit(cs.last +: q)
 
-        if (stages contains depth) {
+        if ((stages contains depth) || all) {
           val regznext = if (znext.isEmpty) znext else RegNext(VecInit(znext))
           nextLayer(
             RegNext(cs.last),
@@ -58,7 +58,7 @@ class NonRestoringArrayDivider(val width: Int, val stages: Seq[Int])
         } else
           nextLayer(cs.last, znext, snext, d, qnext, depth + 1)
       } else {
-        (VecInit(q).asUInt, s)
+        (RegNext(VecInit(q).asUInt), RegNext(s))
       }
     }
 
@@ -74,7 +74,7 @@ class NonRestoringArrayDivider(val width: Int, val stages: Seq[Int])
   io.S := s
 }
 
-class RestoringArrayDivider(val width: Int, val stages: Seq[Int])
+class RestoringArrayDivider(val width: Int, val stages: Seq[Int], val all: Boolean = false)
     extends Module {
   val io = IO(new Bundle {
     val z = Input(UInt((2 * width).W)) // dividend
@@ -122,7 +122,7 @@ class RestoringArrayDivider(val width: Int, val stages: Seq[Int])
         val znext = z.dropRight(1)
         val qnext = VecInit(ctrl +: q)
 
-        if (stages contains depth) {
+        if ((stages contains depth) || all) {
           val regznext = if (znext.isEmpty) znext else RegNext(VecInit(znext))
           nextLayer(
             regznext,
@@ -134,7 +134,7 @@ class RestoringArrayDivider(val width: Int, val stages: Seq[Int])
         } else
           nextLayer(znext, snext, d, qnext, depth + 1)
       } else {
-        (VecInit(q).asUInt, s)
+        (RegNext(VecInit(q).asUInt), RegNext(s))
       }
     }
 

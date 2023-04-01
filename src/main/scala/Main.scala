@@ -2,10 +2,10 @@ package fpu
 
 object Main extends App {
   val stage = new chisel3.stage.ChiselStage
-  // stage.emitVerilog(
-  //   new FRoot,
-  //   Array("--target-dir", "verilog/", "-o", "FRoot")
-  // )
+  stage.emitVerilog(
+    new FRoot,
+    Array("--target-dir", "verilog/", "-o", "FRoot")
+  )
   // stage.emitVerilog(
   //   new FMul,
   //   Array("--target-dir", "verilog/", "-o", "FMul")

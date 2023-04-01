@@ -21,6 +21,7 @@ class NonRestoringArrayDividerSpec
     for (ops <- 1 until 10) {
       test(new NonRestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
+          val steps = stages.size + 1
           val d = BigInt(w, r) | BigInt(1 << (w - 1))
           val z = BigInt(w, r) | BigInt(1 << (w - 1))
           val Q = z / d
@@ -29,7 +30,7 @@ class NonRestoringArrayDividerSpec
           c.io.z.poke(z.U)
           c.io.d.poke(d.U)
 
-          c.clock.step(3)
+          c.clock.step(steps)
 
           // println(s"$z/$d = $Q =/= ${c.io.Q.peek().litValue}")
 
@@ -40,7 +41,7 @@ class NonRestoringArrayDividerSpec
 
   for (w <- List(8, 16, 24, 32)) {
     val stages = Seq(w / 3, 2 * w / 3)
-    val steps = stages.size
+    val steps = stages.size + 1
     it should s"Divide $n $w-bit numbers in ${steps + 1} cycles" in {
       test(new NonRestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
@@ -90,6 +91,7 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
     for (ops <- 1 until 30) {
       test(new RestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
+          val steps = stages.size + 1
           val d = BigInt(w, r) | BigInt(1 << (w - 1))
           val z = (BigInt(w, r) | BigInt(1 << (w - 1))) << (w - 1)
           val Q = z / d
@@ -98,7 +100,7 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
           c.io.z.poke(z.U)
           c.io.d.poke(d.U)
 
-          c.clock.step(3)
+          c.clock.step(steps)
           c.io.Q.expect(Q.U)
         }
     }
@@ -106,7 +108,7 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
 
   for (w <- List(8, 16, 24, 32)) {
     val stages = Seq(w / 3, 2 * w / 3)
-    val steps = stages.size
+    val steps = stages.size + 1
     it should s"Divide $n $w-bit numbers in ${steps + 1} cycles" in {
       test(new RestoringArrayDivider(w, stages))
         .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
@@ -160,7 +162,7 @@ class RestoringArrayDividerSpec extends AnyFlatSpec with ChiselScalatestTester {
         c.io.z.poke(z.U)
         c.io.d.poke(d.U)
 
-        c.clock.step(3)
+        c.clock.step(stages.size + 1)
 
         val qs =
           c.io.Q.peek().litValue.toString(2).reverse.padTo(24, '0').reverse

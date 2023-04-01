@@ -127,7 +127,7 @@ class FastAdderPipelined(val width: Int, val valency: Int) extends Module {
         val ss = for (i <- 0 until width) yield {
           cs(i) ^ ts(i)
         }
-        (VecInit(ss).asUInt, cs.last.asUInt)
+        (RegNext(VecInit(ss).asUInt), RegNext(cs.last.asUInt))
       } else {
         val layer = VecInit(Vector.tabulate(prev.size) { i =>
           if (i < valency * groupoffset) {

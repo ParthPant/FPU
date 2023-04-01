@@ -5,7 +5,7 @@ import chisel3.util._
 
 // Refer: https://www.giscafe.com/book/ASIC/CH02/CH02.16.php
 
-class ArrayMultiplier(val width: Int, val stages: Seq[Int]) extends Module {
+class ArrayMultiplier(val width: Int, val stages: Seq[Int], val all: Boolean = false) extends Module {
   val io = IO(new Bundle {
     val a = Input(UInt(width.W))
     val b = Input(UInt(width.W))
@@ -42,7 +42,7 @@ class ArrayMultiplier(val width: Int, val stages: Seq[Int]) extends Module {
           })
           .asUInt
 
-        if (stages contains depth) {
+        if ((stages contains depth) || all) {
           nextLayer(
             (RegNext(a), RegNext(nextb)),
             (RegNext(s), RegNext(c)),
@@ -57,7 +57,7 @@ class ArrayMultiplier(val width: Int, val stages: Seq[Int]) extends Module {
         val y = prev._2
         val (s, c) = RippleCarryAdder(width)(x, y, 0.U)
         val product = Cat(s, res)
-        product
+        RegNext(product)
       }
     }
 

@@ -15,7 +15,7 @@ class FRootSpec
   behavior of "FRoot"
 
   val r = scala.util.Random
-  val steps = 1
+  val steps = 13
 
   it should "Calculate Square Root of a floating Point number" in {
     for (i <- 0 until 20) {

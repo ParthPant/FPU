@@ -24,7 +24,7 @@ class FAddSub extends Module {
   expsub.io.a := io.a.exp;
   expsub.io.b := ~io.b.exp;
   expsub.io.cin := 1.U;
-  // 3
+  // 4
   val exp_diff = Mux(expsub.io.Cout.asBool, expsub.io.Sum, ~expsub.io.Sum + 1.U)
   val exp_cout = expsub.io.Cout.asBool
   val diff_gt = exp_diff > 24.U
@@ -33,10 +33,10 @@ class FAddSub extends Module {
   val op2 = Wire(UInt(48.W))
   val exp = Wire(UInt(8.W))
 
-  val bsigreg = Delay(bsig, 2)
-  val asigreg = Delay(asig, 2)
-  val aexpreg = Delay(aexp, 2)
-  val bexpreg = Delay(bexp, 2)
+  val bsigreg = Delay(bsig, 3)
+  val asigreg = Delay(asig, 3)
+  val aexpreg = Delay(aexp, 3)
+  val bexpreg = Delay(bexp, 3)
 
   when(~diff_gt) {
     op1 := asigreg
@@ -52,37 +52,38 @@ class FAddSub extends Module {
     exp := Mux(exp_cout, aexpreg, bexpreg)
   }
 
-  val adder = Module(new FastAdderPipelined(48, 6))
+  val adder = Module(new FastAdderPipelined(48, 4))
   adder.io.a := op1
   adder.io.b := op2
   adder.io.cin := 0.U;
 
-  val subtractor = Module(new FastAdderPipelined(48, 6))
+  val subtractor = Module(new FastAdderPipelined(48, 4))
   subtractor.io.a := op1
   subtractor.io.b := ~op2
   subtractor.io.cin := 1.U;
 
-  // 7
+  // 9
   val addout = adder.io.Sum
   val subout =
     Mux(subtractor.io.Cout.asBool, subtractor.io.Sum, ~subtractor.io.Sum + 1.U)
-  val sumout = Mux(Delay(op, 6), subout, addout)
-  val cout = Mux(Delay(op, 6), subtractor.io.Cout, adder.io.Cout)
-  val asignreg = Delay(asign, 6)
-  val signout = Mux(Delay(op, 6), asignreg ^ ~cout, asignreg)
+  val sumout = Mux(Delay(op, 8), subout, addout)
+  val cout = Mux(Delay(op, 8), subtractor.io.Cout, adder.io.Cout)
+  val asignreg = Delay(asign, 8)
+  val signout = Mux(Delay(op, 8), asignreg ^ ~cout, asignreg)
 
-  // 8
+  // 10
   val clz = Module(new CLZ48())
   val sumval = Delay(sumout, 1)
-  val expval = Delay(exp, 5)
+  val expval = Delay(exp, 6)
   clz.io.in := sumval
   val lzs = clz.io.Z
   val sum = ShiftLeft(48)(sumval, lzs)(47, 24)
-  when(diff_gt) {
+
+  when(Delay(diff_gt, 6)) {
     io.out.exp := expval
   }.otherwise {
     val expsel = lzs < 24.U
-    val off = Mux(expsel, 24.U - lzs, lzs - 24.U)
+    val off = Mux(expsel.asBool, 24.U - lzs, lzs - 24.U)
     io.out.exp := Mux(expsel, expval + off, expval - off)
   }
   io.out.sign := Delay(signout, 1)

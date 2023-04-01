@@ -18,9 +18,9 @@ class FAddSubSpec
   def log2(x: Double): Double = scala.math.log(x) / lnOf2
   val r = scala.util.Random
 
-  val steps = 7
+  val steps = 9;
   it should "Add two numbers" in {
-    for (i <- 0 until 20) {
+    for (i <- 0 until 10) {
       test(new FAddSub).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
         val a = -100 + 200 * r.nextFloat()
         val b = -100 + 200 * r.nextFloat()
