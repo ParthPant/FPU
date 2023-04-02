@@ -18,7 +18,7 @@ class FAddSubSpec
   def log2(x: Double): Double = scala.math.log(x) / lnOf2
   val r = scala.util.Random
 
-  val steps = 9;
+  val steps = 15;
   it should "Add two numbers" in {
     for (i <- 0 until 10) {
       test(new FAddSub).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
@@ -46,8 +46,8 @@ class FAddSubSpec
   it should s"Add $n pipelined numbers" in {
     test(new FAddSub).withAnnotations(Seq(WriteVcdAnnotation)) { c =>
       val ips = for (i <- 1 to n) yield {
-        val a = -1 + 2 * r.nextFloat()
-        val b = -1 + 2 * r.nextFloat()
+        val a = -100 + 200 * r.nextFloat()
+        val b = -100 + 200 * r.nextFloat()
         val diff = r.nextBoolean()
         val s = if (diff) { a - b }
         else { a + b }

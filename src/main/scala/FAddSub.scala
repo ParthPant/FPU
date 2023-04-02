@@ -74,18 +74,17 @@ class FAddSub extends Module {
   // 10
   val clz = Module(new CLZ48())
   val sumval = Delay(sumout, 1)
-  val expval = Delay(exp, 6)
   clz.io.in := sumval
   val lzs = clz.io.Z
   val sum = ShiftLeft(48)(sumval, lzs)(47, 24)
 
-  when(Delay(diff_gt, 6)) {
-    io.out.exp := expval
-  }.otherwise {
-    val expsel = lzs < 24.U
-    val off = Mux(expsel.asBool, 24.U - lzs, lzs - 24.U)
-    io.out.exp := Mux(expsel, expval + off, expval - off)
-  }
-  io.out.sign := Delay(signout, 1)
-  io.out.significand := sum
+  // 13
+  val (offout, expsel) = FastAdderPipelined(8, 4)(24.U, Cat(3.U, ~lzs), 1.U)
+
+  // 16
+  val expout = FastAdderPipelined(8, 4)(Delay(exp, 9), offout, 0.U)
+
+  io.out.exp := Mux(Delay(diff_gt, 12), Delay(exp, 12), expout._1)
+  io.out.sign := Delay(signout, 7)
+  io.out.significand := Delay(sum, 6)
 }
