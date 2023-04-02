@@ -7,6 +7,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import chiseltest.simulator.WriteVcdAnnotation
 import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ListBuffer
+import fpu.util._
 
 class FAddSubSpec
     extends AnyFlatSpec

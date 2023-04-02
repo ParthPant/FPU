@@ -3,6 +3,7 @@ package fpu
 import chisel3._
 import chisel3.util._
 import scala.math.pow
+import fpu.util._
 
 class FAddSub extends Module {
   val io = IO(new Bundle {

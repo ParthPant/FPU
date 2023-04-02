@@ -2,6 +2,7 @@ package fpu
 
 import chisel3.util._
 import chisel3._
+import fpu.util._
 
 class FRoot extends Module {
   val io = IO(new Bundle {

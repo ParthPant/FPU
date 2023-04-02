@@ -1,10 +1,13 @@
-package fpu
+package fpu.util
 
 import chisel3._
 import chisel3.util._
 
-class NonRestoringArrayDivider(val width: Int, val stages: Seq[Int], val all: Boolean = false)
-    extends Module {
+class NonRestoringArrayDivider(
+    val width: Int,
+    val stages: Seq[Int],
+    val all: Boolean = false
+) extends Module {
   val io = IO(new Bundle {
     val z = Input(UInt((2 * width).W)) // dividend
     val d = Input(UInt(width.W)) // divisor
@@ -74,8 +77,11 @@ class NonRestoringArrayDivider(val width: Int, val stages: Seq[Int], val all: Bo
   io.S := s
 }
 
-class RestoringArrayDivider(val width: Int, val stages: Seq[Int], val all: Boolean = false)
-    extends Module {
+class RestoringArrayDivider(
+    val width: Int,
+    val stages: Seq[Int],
+    val all: Boolean = false
+) extends Module {
   val io = IO(new Bundle {
     val z = Input(UInt((2 * width).W)) // dividend
     val d = Input(UInt(width.W)) // divisor

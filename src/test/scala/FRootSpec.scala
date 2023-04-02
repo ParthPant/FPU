@@ -7,6 +7,7 @@ import chiseltest.simulator.WriteVcdAnnotation
 import scala.collection.mutable.ListBuffer
 import org.scalatest.matchers.should.Matchers._
 import com.typesafe.scalalogging.LazyLogging
+import fpu.util._
 
 class FRootSpec
     extends AnyFlatSpec

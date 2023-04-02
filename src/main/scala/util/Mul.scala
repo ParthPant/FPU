@@ -1,11 +1,15 @@
-package fpu
+package fpu.util
 
 import chisel3._
 import chisel3.util._
 
 // Refer: https://www.giscafe.com/book/ASIC/CH02/CH02.16.php
 
-class ArrayMultiplier(val width: Int, val stages: Seq[Int], val all: Boolean = false) extends Module {
+class ArrayMultiplier(
+    val width: Int,
+    val stages: Seq[Int],
+    val all: Boolean = false
+) extends Module {
   val io = IO(new Bundle {
     val a = Input(UInt(width.W))
     val b = Input(UInt(width.W))

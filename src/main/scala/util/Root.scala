@@ -1,9 +1,10 @@
-package fpu
+package fpu.util
 
 import chisel3._
 import chisel3.util._
 
-class SqRooter(val width: Int, val stages: Seq[Int], val all: Boolean = false) extends Module {
+class SqRooter(val width: Int, val stages: Seq[Int], val all: Boolean = false)
+    extends Module {
   assert(width % 2 == 0)
   val io = IO(new Bundle {
     val z = Input(UInt(width.W)) // Radicand
