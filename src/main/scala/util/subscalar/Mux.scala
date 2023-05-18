@@ -20,3 +20,22 @@ class SSMux(val width: Int) extends Module {
 
   io.out := outs.asUInt()
 }
+
+class Mux(val width: Int) extends Module {
+  val io = IO(new Bundle {
+    val a = Input(UInt(width.W))
+    val b = Input(UInt(width.W))
+    val sel = Input(Bool())
+
+    val out = Output(UInt(width.W))
+  })
+
+  val outs = Wire(Vec(width, Bool()))
+
+  for ((i, d) <- (0 until width by 2).zipWithIndex) {
+    outs(i) := Mux(Delay(io.sel, d), io.a(i), io.b(i))
+    outs(i+1) := Mux(Delay(io.sel, d), io.a(i+1), io.b(i+1))
+  }
+
+  io.out := outs.asUInt()
+}

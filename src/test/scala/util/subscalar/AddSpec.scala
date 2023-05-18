@@ -19,27 +19,32 @@ class AddTest(val width: Int) extends Module {
 
   val a = Wire(Vec(width, Bool()))
   val b = Wire(Vec(width, Bool()))
-  for (i <- 0 until width) {
-    a(i) := Delay(io.a(i), i) // (if (i == 0) io.a(i) else Delay(io.a(i), i))
-    b(i) := Delay(io.b(i), i) // (if (i == 0) io.b(i) else Delay(io.b(i), i))
+  for ((i, d) <- (0 until width by 2).zipWithIndex) {
+    a(i) := Delay(io.a(i), d)
+    a(i+1) := Delay(io.a(i+1), d)
+
+    b(i) := Delay(io.b(i), d)
+    b(i+1) := Delay(io.b(i+1), d)
   }
 
-  val adder = Module(new SSAdder(width))
+  val adder = Module(new Adder(width))
   adder.io.a := a.asUInt
   adder.io.b := b.asUInt
   adder.io.cin := io.cin
 
   val out = Wire(Vec(width, Bool()))
-  for (i <- 0 until width) {
-    out(i) := Delay(adder.io.s(i), width - i)
+  for ((i, d) <- (0 until width by 2).zipWithIndex) {
+    out(i) := Delay(adder.io.s(i), width/2 - d)
+    out(i+1) := Delay(adder.io.s(i+1), width/2 - d)
   }
 
-  io.s := out.asUInt()
+  io.s := out.asUInt
+  // io.s := adder.io.s
   io.cout := adder.io.cout
 }
 
-class SSAddSpec extends AnyFlatSpec with ChiselScalatestTester {
-  behavior of "SSAdder"
+class AddSpec extends AnyFlatSpec with ChiselScalatestTester {
+  behavior of "SubscalarAdder"
 
   val r = scala.util.Random
 
@@ -59,7 +64,7 @@ class SSAddSpec extends AnyFlatSpec with ChiselScalatestTester {
         c.io.b.poke(b.U)
         c.io.cin.poke(cin.U)
 
-        c.clock.step(w + 1)
+        c.clock.step(w/2 + 1)
 
         c.io.s.expect(sum.U)
         c.io.cout.expect(cout.U)

@@ -18,26 +18,30 @@ class MuxTest(val width: Int) extends Module {
 
   val a = Wire(Vec(width, Bool()))
   val b = Wire(Vec(width, Bool()))
-  for (i <- 0 until width) {
-    a(i) := Delay(io.a(i), i) // (if (i == 0) io.a(i) else Delay(io.a(i), i))
-    b(i) := Delay(io.b(i), i) // (if (i == 0) io.b(i) else Delay(io.b(i), i))
+  for ((i, d) <- (0 until width by 2).zipWithIndex) {
+    a(i) := Delay(io.a(i), d) // (if (i == 0) io.a(i) else Delay(io.a(i), i))
+    a(i+1) := Delay(io.a(i+1), d) // (if (i == 0) io.a(i) else Delay(io.a(i), i))
+
+    b(i) := Delay(io.b(i), d) // (if (i == 0) io.b(i) else Delay(io.b(i), i))
+    b(i+1) := Delay(io.b(i+1), d) // (if (i == 0) io.b(i) else Delay(io.b(i), i))
   }
 
-  val mux = Module(new SSMux(width))
+  val mux = Module(new Mux(width))
   mux.io.a := a.asUInt
   mux.io.b := b.asUInt
   mux.io.sel := io.sel
 
   val out = Wire(Vec(width, Bool()))
-  for (i <- 0 until width) {
-    out(i) := Delay(mux.io.out(i), width - i)
+  for ((i, d) <- (0 until width by 2).zipWithIndex) {
+    out(i) := Delay(mux.io.out(i), width/2 - d)
+    out(i+1) := Delay(mux.io.out(i+1), width/2 - d)
   }
 
   io.out := out.asUInt()
 }
 
-class SSMuxSpec extends AnyFlatSpec with ChiselScalatestTester {
-  behavior of "SSMux"
+class MuxSpec extends AnyFlatSpec with ChiselScalatestTester {
+  behavior of "SubscalarMux"
 
   val r = scala.util.Random
 
@@ -56,7 +60,7 @@ class SSMuxSpec extends AnyFlatSpec with ChiselScalatestTester {
         c.io.b.poke(b.U)
         c.io.sel.poke(sel.B)
 
-        c.clock.step(w + 1)
+        c.clock.step(w/2)
 
         c.io.out.expect(out.U)
       }
